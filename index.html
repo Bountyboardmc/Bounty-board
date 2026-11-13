@@ -1,759 +1,675 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sheriff's Bounty Board — Wild West Minecraft</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@400;500;600;700&family=Press+Start+2P&family=Rye&family=VT323&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gesucht! Kopfgeld-Tafel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --wood-1: #1a0f07;
+    --wood-2: #110904;
+    --wood-line: #070301;
+    --paper: #b0955d;
+    --paper-dark: #8c713f;
+    --ink: #120803;
+    --blood: #61130d;
+    --gold: #73531b;
+    --ease: cubic-bezier(.22, 1, .36, 1);
+    --head: "Rye", "Rockwell", Georgia, serif;
+    --body: "Special Elite", "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--wood-2); }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.4;
+    color: var(--ink);
+    padding: 36px 16px 80px;
+    overflow-x: hidden;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 138px, var(--wood-line) 138px 142px),
+      repeating-linear-gradient(0deg, rgba(0,0,0,.25) 0 2px, transparent 2px 7px),
+      linear-gradient(180deg, var(--wood-1), var(--wood-2));
+  }
+  main { position: relative; z-index: 2; max-width: 900px; margin: 0 auto; }
 
-  <style>
-    :root {
-      --saloon-darkest: #140b05;
-      --saloon-dark: #241308;
-      --cedar-mid: #4a2a14;
-      --cedar-light: #6b3f1e;
-      --sunset-amber: #e08d3c;
-      --brass-gold: #d9a441;
-      --parchment-light: #f9efd9;
-      --parchment-mid: #eedbb8;
-      --parchment-burnt: #d8bc8c;
-      --ink-sepia: #261408;
-      --ink-faded: #5c3b20;
-      --stamp-crimson: #941b16;
-      --diamond-cyan: #4deeea;
-    }
+  /* Atmosphäre: Nebel, Staub, Laternenlicht */
+  .fog {
+    position: fixed; left: -20%; right: -20%; bottom: -10%; height: 45%;
+    pointer-events: none; z-index: 1;
+    background:
+      radial-gradient(ellipse at 20% 80%, rgba(150,140,120,.06), transparent 60%),
+      radial-gradient(ellipse at 70% 90%, rgba(150,140,120,.05), transparent 55%);
+    animation: fog 40s ease-in-out infinite alternate;
+  }
+  @keyframes fog { from { transform: translateX(-5%); } to { transform: translateX(5%); } }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  .dust { position: fixed; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+  .dust i {
+    position: absolute; top: 100%; left: var(--x);
+    width: var(--s); height: var(--s); border-radius: 50%;
+    background: rgba(205,175,120,.4);
+    opacity: 0;
+    animation: drift var(--d) linear var(--l) infinite;
+  }
+  @keyframes drift {
+    0% { transform: translate(0, 0); opacity: 0; }
+    12% { opacity: .7; }
+    88% { opacity: .4; }
+    100% { transform: translate(var(--dx), -112vh); opacity: 0; }
+  }
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background-color: var(--saloon-darkest);
-      background-image:
-        radial-gradient(ellipse 90% 55% at 50% -8%, rgba(235, 138, 46, 0.26) 0%, rgba(168, 76, 18, 0.1) 48%, transparent 78%),
-        radial-gradient(circle at 12% 18%, rgba(255, 183, 77, 0.08) 0%, transparent 35%),
-        radial-gradient(circle at 88% 18%, rgba(255, 183, 77, 0.08) 0%, transparent 35%),
-        linear-gradient(180deg, #211107 0%, #160b04 55%, #0e0703 100%);
-      color: #f5e6cc;
-      overflow-x: hidden;
-    }
+  #light {
+    position: fixed; inset: 0; pointer-events: none; z-index: 50;
+    background: radial-gradient(circle var(--r, 420px) at var(--mx, 50%) var(--my, 35%),
+      rgba(255,140,40,.05) 0%, rgba(0,0,0,0) 50%, rgba(2,1,0,.6) 100%);
+  }
 
-    #ambientCanvas, #burstCanvas {
-      position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none;
-    }
-    #ambientCanvas { z-index: 0; }
-    #burstCanvas { z-index: 60; }
+  /* Titelschild */
+  .sign {
+    position: relative;
+    text-align: center;
+    background: linear-gradient(180deg, #241409, var(--wood-1));
+    border: 6px solid var(--wood-line);
+    outline: 3px solid var(--gold);
+    outline-offset: -12px;
+    padding: 26px 20px 22px;
+    margin: 0 auto 40px;
+    max-width: 640px;
+    box-shadow: 0 12px 0 rgba(0,0,0,.65);
+    transform-origin: 50% 0;
+    animation: signDrop 1.3s var(--ease) both;
+  }
+  @keyframes signDrop {
+    0% { opacity: 0; transform: translateY(-120px) rotate(-3deg); }
+    55% { opacity: 1; transform: translateY(8px) rotate(1.2deg); }
+    78% { transform: translateY(0) rotate(-.5deg); }
+    100% { transform: none; }
+  }
+  .sign h1 {
+    font-family: var(--head);
+    font-weight: 400;
+    font-size: clamp(34px, 9vw, 64px);
+    line-height: 1;
+    margin: 0 0 8px;
+    color: #c4aa72;
+    animation: flicker 7s linear infinite;
+  }
+  @keyframes flicker {
+    0%, 100% { text-shadow: 3px 3px 0 #070301, 0 0 18px rgba(255,120,30,.25); }
+    6% { text-shadow: 3px 3px 0 #070301, 0 0 10px rgba(255,120,30,.12); }
+    9% { text-shadow: 3px 3px 0 #070301, 0 0 22px rgba(255,120,30,.32); }
+    47% { text-shadow: 3px 3px 0 #070301, 0 0 14px rgba(255,120,30,.2); }
+    50% { text-shadow: 3px 3px 0 #070301, 0 0 6px rgba(255,120,30,.08); }
+    53% { text-shadow: 3px 3px 0 #070301, 0 0 20px rgba(255,120,30,.3); }
+  }
+  .sign p { margin: 0; color: #8c713f; }
 
-    .font-western { font-family: 'Rye', serif; }
-    .font-typewriter { font-family: 'Courier Prime', monospace; font-variant-numeric: tabular-nums; }
-    .font-pixel { font-family: 'Press Start 2P', monospace; font-variant-numeric: tabular-nums; }
+  /* Papier */
+  .paper {
+    position: relative;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.12), transparent 55%),
+      radial-gradient(ellipse at 100% 100%, rgba(50,20,5,.45), transparent 60%),
+      var(--paper);
+    border: 3px solid var(--ink);
+    box-shadow:
+      inset 0 0 45px rgba(40,16,3,.7),
+      inset 0 0 8px rgba(0,0,0,.75),
+      6px 8px 0 rgba(0,0,0,.7);
+    padding: 26px 22px 22px;
+  }
+  .paper::before, .paper::after {
+    content: "";
+    position: absolute;
+    top: 8px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #777, #0d0d0d);
+  }
+  .paper::before { left: 8px; }
+  .paper::after { right: 8px; }
 
-    .sheriff-board {
-      position: relative;
-      border-radius: 4px;
-      background:
-        repeating-linear-gradient(90deg, rgba(15,7,2,0.24) 0px, rgba(15,7,2,0.24) 3px, transparent 3px, transparent 72px),
-        repeating-linear-gradient(0deg, rgba(255,195,130,0.025) 0px, rgba(255,195,130,0.025) 1px, transparent 1px, transparent 14px),
-        linear-gradient(170deg, #543118 0%, #3d2210 48%, #2b170a 100%);
-      border-top: 4px solid #8a562e;
-      border-left: 4px solid #7c4b26;
-      border-right: 4px solid #381e0c;
-      border-bottom: 4px solid #2b1608;
-      box-shadow: 0 35px 80px -15px rgba(0,0,0,0.9), 0 0 0 3px #140a03, inset 3px 3px 0 rgba(255,214,153,0.24), inset -3px -3px 0 rgba(16,8,3,0.72), inset 0 0 75px rgba(0,0,0,0.72);
-    }
+  .form {
+    max-width: 560px;
+    margin: 0 auto 52px;
+    rotate: -.6deg;
+    animation: rise 1s var(--ease) .55s both;
+  }
+  @keyframes rise { from { opacity: 0; translate: 0 40px; } to { opacity: 1; translate: 0 0; } }
+  .form h2 {
+    font-family: var(--head);
+    font-weight: 400;
+    font-size: 30px;
+    text-align: center;
+    margin: 0 0 4px;
+    color: var(--blood);
+  }
+  .form .sub { text-align: center; margin: 0 0 20px; border-bottom: 2px solid var(--ink); padding-bottom: 12px; }
 
-    .rope-trim {
-      border: 2px dashed rgba(217,168,92,0.34);
-      border-radius: 3px;
-      box-shadow: inset 0 0 24px rgba(0,0,0,0.45);
-    }
+  label { display: block; font-size: 15px; margin-bottom: 4px; }
+  .field { margin-bottom: 18px; }
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    font: inherit;
+    font-size: 22px;
+    color: var(--ink);
+    background: rgba(0,0,0,.12);
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    padding: 8px 12px;
+    transition: background .3s var(--ease), box-shadow .3s var(--ease);
+  }
+  input:hover { background: rgba(0,0,0,.18); }
+  input:focus { background: rgba(0,0,0,.24); box-shadow: 0 0 0 3px rgba(97,19,13,.55); outline: none; }
+  input::placeholder { color: rgba(18,8,3,.5); }
+  button:focus-visible { outline: 3px solid var(--blood); outline-offset: 2px; }
+  .hint { font-size: 14px; margin-top: 4px; min-height: 1.4em; transition: color .3s; }
+  .hint.error { color: var(--blood); font-weight: bold; }
 
-    .board-plank-well {
-      border-radius: 3px;
-      background:
-        radial-gradient(ellipse at 50% 0%, rgba(235,152,68,0.08), transparent 72%),
-        repeating-linear-gradient(0deg, rgba(10,5,2,0.34) 0px, rgba(10,5,2,0.34) 3px, transparent 3px, transparent 54px),
-        linear-gradient(180deg, #241308 0%, #190d05 100%);
-      box-shadow: inset 0 8px 24px rgba(0,0,0,0.85), inset -2px -2px 0 rgba(255,205,145,0.1), inset 2px 2px 0 rgba(0,0,0,0.65);
-      border: 2px solid #140a04;
-    }
+  .amount-wrap { position: relative; }
+  .amount-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); }
+  .amount-wrap input { padding-left: 50px; }
+  .quick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 
-    .iron-plate {
-      position: absolute; width: 30px; height: 30px; border-radius: 2px;
-      background: linear-gradient(135deg, #52555c 0%, #27292e 60%, #141518 100%);
-      border-top: 2px solid #868c96; border-left: 2px solid #767c85;
-      border-right: 2px solid #1e2024; border-bottom: 2px solid #141518;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.78); z-index: 12; pointer-events: none;
-    }
-    .iron-plate::after {
-      content: ''; position: absolute; width: 8px; height: 8px; border-radius: 1px;
-      background: linear-gradient(135deg, #cbd5e1, #475569);
-      border-top: 1px solid #f1f5f9; border-left: 1px solid #e2e8f0;
-      border-right: 1px solid #1e293b; border-bottom: 1px solid #0f172a;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.9); top: 50%; left: 50%; transform: translate(-50%,-50%);
-    }
-    .plate-tl { top: -5px; left: -5px; }
-    .plate-tr { top: -5px; right: -5px; }
-    .plate-bl { bottom: -5px; left: -5px; }
-    .plate-br { bottom: -5px; right: -5px; }
+  button {
+    font-family: var(--body);
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--paper-dark);
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    padding: 7px 12px;
+    cursor: pointer;
+    box-shadow: 2px 3px 0 var(--ink);
+    transition: background .3s var(--ease), translate .18s var(--ease), box-shadow .18s var(--ease);
+  }
+  button:hover { background: #73582e; color: #f5e6c8; }
+  button:active { translate: 2px 3px; box-shadow: 0 0 0 var(--ink); }
+  button:disabled { cursor: default; opacity: .6; }
+  button.primary {
+    width: 100%;
+    font-family: var(--head);
+    font-size: 22px;
+    color: #e3cfa0;
+    background: var(--blood);
+    padding: 12px;
+    box-shadow: 3px 4px 0 var(--ink);
+  }
+  button.primary:hover { background: #4a0d09; box-shadow: 3px 4px 0 var(--ink), 0 0 20px rgba(130,30,20,.45); }
 
-    .western-parchment {
-      border-radius: 3px;
-      background:
-        radial-gradient(circle at 88% 12%, rgba(166,108,44,0.22), transparent 36%),
-        radial-gradient(circle at 10% 88%, rgba(138,84,30,0.24), transparent 42%),
-        radial-gradient(ellipse at 50% 50%, var(--parchment-light) 45%, var(--parchment-mid) 82%, var(--parchment-burnt) 100%);
-      color: var(--ink-sepia);
-      border-top: 2px solid #d4b17a; border-left: 2px solid #c7a269;
-      border-right: 2px solid #8c6938; border-bottom: 2px solid #78582b;
-      box-shadow: 0 14px 32px -6px rgba(0,0,0,0.72), 0 4px 10px -2px rgba(0,0,0,0.45), inset 0 0 32px rgba(133,84,32,0.26), inset 2px 2px 0 rgba(255,252,240,0.75);
-    }
+  h3.board-title {
+    font-family: var(--head);
+    font-weight: 400;
+    font-size: 28px;
+    color: #c4aa72;
+    text-shadow: 2px 2px 0 var(--wood-line);
+    margin: 0 0 24px;
+    text-align: center;
+  }
+  .empty { text-align: center; color: #8c713f; margin: 0; transition: opacity .5s var(--ease); }
 
-    .bounty-card { position: relative; transform-style: preserve-3d; will-change: transform, opacity; transition: box-shadow 0.28s cubic-bezier(0.22,1,0.36,1); cursor: default; }
-    .bounty-card-inner {
-      position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between;
-      border-radius: 2px; padding: 22px 16px 15px;
-      background:
-        radial-gradient(circle at 85% 15%, rgba(145,92,38,0.18), transparent 38%),
-        radial-gradient(circle at 14% 85%, rgba(130,78,28,0.22), transparent 44%),
-        radial-gradient(ellipse at 50% 45%, #fbf2de 42%, #efe0be 80%, #dcc192 100%);
-      border-top: 2px solid #d6b47e; border-left: 2px solid #c9a46b;
-      border-right: 2px solid #8f6b38; border-bottom: 2px solid #7a5829;
-      box-shadow: 0 12px 24px -6px rgba(0,0,0,0.75), 0 3px 7px rgba(0,0,0,0.45), inset 0 0 28px rgba(135,86,34,0.25), inset 2px 2px 0 rgba(255,253,244,0.85);
-      overflow: hidden; transition: border-color 0.25s ease, box-shadow 0.28s ease;
-    }
-    .bounty-card-inner::before, .bounty-card-inner::after {
-      content: ''; position: absolute; width: 6px; height: 6px; background: #241308; z-index: 5; pointer-events: none;
-    }
-    .bounty-card-inner::before { top: -2px; right: -2px; box-shadow: -4px 4px 0 #7a5829; }
-    .bounty-card-inner::after { bottom: -2px; left: -2px; box-shadow: 4px -4px 0 #8f6b38; }
-    .bounty-card:hover .bounty-card-inner {
-      border-top-color: #f0c265; border-left-color: #e0b053;
-      box-shadow: 0 24px 42px -10px rgba(0,0,0,0.85), 0 0 26px rgba(224,141,60,0.24), inset 0 0 28px rgba(135,86,34,0.28), inset 2px 2px 0 rgba(255,255,255,0.92);
-    }
+  /* Steckbriefe */
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 34px 26px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+  li.poster {
+    --tilt: 0deg;
+    rotate: var(--tilt);
+    transform-origin: 50% 10px;
+    padding: 34px 16px 16px;
+    text-align: center;
+    animation: sway var(--sway, 8s) ease-in-out infinite;
+    transition: scale .5s var(--ease), box-shadow .5s var(--ease);
+  }
+  @keyframes sway {
+    0%, 100% { rotate: var(--tilt); }
+    50% { rotate: calc(var(--tilt) + .9deg); }
+  }
+  li.poster:hover {
+    scale: 1.04;
+    z-index: 5;
+    box-shadow:
+      inset 0 0 45px rgba(40,16,3,.7), inset 0 0 8px rgba(0,0,0,.75),
+      10px 16px 0 rgba(0,0,0,.6), 0 0 34px rgba(255,140,40,.15);
+  }
+  li.poster::before {
+    left: 50%; top: 9px; translate: -50% 0;
+    width: 12px; height: 12px;
+  }
+  li.poster::after { display: none; }
+  li.poster.leaving { pointer-events: none; }
 
-    .card-sheen {
-      position: absolute; inset: 0; pointer-events: none; border-radius: 2px; opacity: 0; transition: opacity 0.25s ease;
-      background: radial-gradient(circle 190px at var(--mx,50%) var(--my,30%), rgba(255,248,225,0.5), transparent 75%);
-      z-index: 4;
-    }
-    .bounty-card:hover .card-sheen { opacity: 1; }
+  .poster .wanted { font-family: var(--head); font-size: 40px; line-height: 1; color: var(--blood); margin: 0; }
+  .poster .dead { font-size: 14px; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); margin: 8px 0 12px; padding: 2px 0; }
+  .photo { position: relative; width: 128px; height: 128px; margin: 0 auto 10px; border: 3px solid var(--ink); background: #3d2c18; overflow: hidden; }
+  .photo img { width: 100%; height: 100%; display: block; object-fit: cover; filter: sepia(.85) contrast(1.15) brightness(.8); transition: filter .6s var(--ease); }
+  li.poster:hover .photo img { filter: sepia(.4) contrast(1.2) brightness(.95); }
+  .photo::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 25px rgba(0,0,0,.75); pointer-events: none; }
+  .poster .name { font-family: var(--head); font-size: 22px; word-break: break-all; margin-bottom: 8px; }
+  .poster .label { font-size: 13px; margin: 0; }
+  .poster .reward { display: flex; justify-content: center; align-items: center; gap: 8px; font-family: var(--head); font-size: 30px; color: var(--blood); }
+  .poster .stacks { font-size: 13px; min-height: 1.2em; margin-bottom: 12px; }
+  .poster button { width: 100%; }
 
-    .iron-nail {
-      position: absolute; top: -9px; left: 50%; transform: translateX(-50%); width: 18px; height: 18px; border-radius: 2px;
-      background: linear-gradient(135deg, #94a3b8 0%, #475569 48%, #1e293b 88%, #090d16 100%);
-      border-top: 2px solid #cbd5e1; border-left: 2px solid #94a3b8;
-      border-right: 2px solid #1e293b; border-bottom: 2px solid #090d16;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.75), 0 1px 2px rgba(0,0,0,0.9); z-index: 16; pointer-events: none;
-    }
-    .iron-nail::after { content: ''; position: absolute; inset: 3px; border-radius: 1px; border: 1px solid rgba(15,23,42,0.45); }
+  /* Stempel */
+  .stamp {
+    position: absolute; left: 50%; top: 46%;
+    font-family: var(--head); font-size: 34px; letter-spacing: 2px;
+    color: var(--blood);
+    border: 5px solid var(--blood);
+    padding: 4px 14px;
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-14deg);
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+  li.poster.leaving .stamp { animation: stamp .4s cubic-bezier(.2, 1.5, .4, 1) forwards; }
+  @keyframes stamp {
+    from { opacity: 0; transform: translate(-50%, -50%) rotate(-14deg) scale(2.8); }
+    to { opacity: .92; transform: translate(-50%, -50%) rotate(-14deg) scale(1); }
+  }
 
-    .captured-stamp {
-      position: absolute; top: 44%; left: 50%; transform: translate(-50%,-50%) rotate(-14deg) scale(1.6);
-      opacity: 0; font-family: 'Rye', serif; font-size: 1.45rem; letter-spacing: 0.14em; color: #991b1b;
-      border: 4px double #991b1b; padding: 4px 12px; border-radius: 2px; background: rgba(250,240,218,0.9);
-      box-shadow: 0 4px 14px rgba(0,0,0,0.35); pointer-events: none; z-index: 25; white-space: nowrap;
-      transition: transform 0.22s cubic-bezier(0.22,1,0.36,1), opacity 0.18s ease;
-    }
-    .bounty-card.is-captured .captured-stamp { opacity: 1; transform: translate(-50%,-50%) rotate(-14deg) scale(1); }
-
-    @keyframes posterNailSlap {
-      0% { opacity: 0; transform: scale(1.25) translateY(-32px) rotate(-5deg); filter: brightness(1.2); }
-      50% { opacity: 1; transform: scale(0.96) translateY(4px) rotate(1.4deg); filter: brightness(1); }
-      76% { transform: scale(1.02) translateY(-1px) rotate(-0.6deg); }
-      100% { opacity: 1; transform: scale(1) translateY(0) rotate(var(--base-rot, 0deg)); }
-    }
-    .animate-poster-slap { animation: posterNailSlap 0.56s cubic-bezier(0.22,1,0.36,1) forwards; }
-
-    @keyframes boardHammerThud {
-      0%,100% { transform: translateY(0); } 25% { transform: translateY(3px); } 60% { transform: translateY(-1.5px); }
-    }
-    .animate-board-thud { animation: boardHammerThud 0.32s cubic-bezier(0.22,1,0.36,1); }
-
-    @keyframes posterTearOff {
-      0% { opacity: 1; transform: scale(1) rotate(var(--base-rot, 0deg)); }
-      35% { opacity: 1; transform: scale(1.03) translateY(-4px) rotate(-2deg); }
-      100% { opacity: 0; transform: scale(0.82) translateY(42px) rotate(11deg); filter: blur(2px); }
-    }
-    .animate-poster-tear { animation: posterTearOff 0.45s cubic-bezier(0.4,0,0.2,1) forwards; pointer-events: none; }
-
-    .mc-diamond-plaque {
-      position: relative; overflow: hidden; background: #1e1a17;
-      border-top: 2.5px solid #0e0c0a; border-left: 2.5px solid #0e0c0a;
-      border-right: 2.5px solid #594e43; border-bottom: 2.5px solid #594e43;
-      box-shadow: inset 2px 2px 0 #120f0d, inset -2px -2px 0 #383029, 0 3px 8px rgba(0,0,0,0.45);
-    }
-    .mc-diamond-plaque::after {
-      content: ''; position: absolute; top: 0; left: -120%; width: 65%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(126,249,245,0.22), transparent);
-      transform: skewX(-22deg); animation: diamondSweep 4.6s ease-in-out infinite;
-    }
-    @keyframes diamondSweep { 0%,66% { left: -120%; } 100% { left: 160%; } }
-
-    .western-portrait-frame {
-      image-rendering: pixelated; border-radius: 2px; background: #2b180c;
-      border-top: 2.5px solid #8c5a30; border-left: 2.5px solid #7a4d27;
-      border-right: 2.5px solid #3b220e; border-bottom: 2.5px solid #2b180a;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.48), inset 0 0 0 1px rgba(255,232,185,0.35);
-    }
-
-    .btn-brass-nail {
-      border-radius: 3px;
-      background: linear-gradient(180deg, #e0a943 0%, #b87e24 52%, #8f5d14 100%);
-      border-top: 2px solid #fce09b; border-left: 2px solid #f5cf76;
-      border-right: 2px solid #6e450a; border-bottom: 2px solid #573507;
-      color: #211004; text-shadow: 0 1px 0 rgba(255,240,195,0.55);
-      box-shadow: 0 4px 0 #422704, 0 10px 20px rgba(0,0,0,0.45), inset 1px 1px 0 rgba(255,250,225,0.65);
-      transition: transform 0.14s cubic-bezier(0.22,1,0.36,1), box-shadow 0.14s ease, filter 0.15s ease;
-    }
-    .btn-brass-nail:hover { filter: brightness(1.07); transform: translateY(-1px); box-shadow: 0 5px 0 #422704, 0 13px 24px rgba(0,0,0,0.52), inset 1px 1px 0 rgba(255,252,235,0.75); }
-    .btn-brass-nail:active { transform: translateY(2px); box-shadow: 0 2px 0 #422704, 0 4px 10px rgba(0,0,0,0.4); }
-
-    .western-input {
-      border-radius: 3px; background: rgba(255,251,240,0.94);
-      border-top: 2px solid #7d5d32; border-left: 2px solid #8f6c3d;
-      border-right: 2px solid #d4b88c; border-bottom: 2px solid #dec49b;
-      color: #241206; transition: all 0.2s cubic-bezier(0.22,1,0.36,1);
-      box-shadow: inset 2px 2px 0 rgba(72,42,16,0.1);
-    }
-    .western-input:focus {
-      outline: none; background: #ffffff;
-      border-top-color: #6b3610; border-left-color: #7d4116;
-      box-shadow: 0 0 0 2px rgba(217,164,65,0.4), inset 2px 2px 0 rgba(72,42,16,0.06);
-    }
-
-    @keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
-    .toast-enter { animation: toastIn 0.32s cubic-bezier(0.22,1,0.36,1) forwards; }
-  </style>
+  @media (max-width: 520px) {
+    body { font-size: 16px; }
+    .form { rotate: 0deg; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .stamp { opacity: .92; }
+  }
+</style>
 </head>
-<body class="py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+<body>
+<div class="fog" aria-hidden="true"></div>
+<div class="dust" id="dust" aria-hidden="true"></div>
+<div id="light" aria-hidden="true"></div>
 
-  <canvas id="ambientCanvas"></canvas>
-  <canvas id="burstCanvas"></canvas>
-
-  <!-- Header -->
-  <header class="relative z-10 text-center max-w-3xl mx-auto mb-7">
-    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/70 border border-amber-600/40 text-amber-300/90 text-xs font-bold tracking-widest uppercase mb-3 shadow-lg">
-      <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-      Sheriff's Office • Frontier Territory
-    </div>
-
-    <h1 class="font-western text-3xl sm:text-5xl tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-[#fff3cf] via-[#e8c678] to-[#b58736] drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)]">
-      BOUNTY BOARD
-    </h1>
-    <p class="mt-2 text-sm sm:text-base text-amber-200/75 font-medium tracking-wide font-typewriter">
-      Wanted — Dead or Alive <span class="text-cyan-300/90 font-bold">(paid in uncut diamonds)</span>
-    </p>
+<main>
+  <header class="sign">
+    <h1>Kopfgeld-Tafel</h1>
+    <p>Wer nachts allein reitet, hängt morgen vielleicht selbst hier.</p>
   </header>
 
-  <!-- Main Board -->
-  <main id="mainBoard" class="sheriff-board relative z-10 w-full max-w-5xl p-4 sm:p-7 lg:p-8">
-    <div class="iron-plate plate-tl"></div>
-    <div class="iron-plate plate-tr"></div>
-    <div class="iron-plate plate-bl"></div>
-    <div class="iron-plate plate-br"></div>
-
-    <div class="rope-trim p-1 mb-6">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div class="flex items-center gap-3 px-4 py-3 rounded bg-black/40 border border-amber-700/30">
-          <div class="text-amber-300 text-xl">📜</div>
-          <div>
-            <div class="text-[10px] uppercase tracking-wider text-amber-200/60 font-bold">Active Posters</div>
-            <div id="statCount" class="font-typewriter text-xl font-bold text-amber-100">0</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 px-4 py-3 rounded bg-black/40 border border-cyan-600/30">
-          <div class="text-cyan-300 text-xl">💎</div>
-          <div>
-            <div class="text-[10px] uppercase tracking-wider text-cyan-200/60 font-bold">Diamond Pool</div>
-            <div id="statPool" class="font-typewriter text-lg font-bold text-cyan-300">0 ♦</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 px-4 py-3 rounded bg-black/40 border border-rose-600/30">
-          <div class="text-rose-300 text-xl">⚡</div>
-          <div>
-            <div class="text-[10px] uppercase tracking-wider text-rose-200/60 font-bold">Status</div>
-            <div id="syncStatus" class="text-sm font-bold text-rose-200">Connecting...</div>
-          </div>
-        </div>
+  <section class="paper form" id="form" aria-labelledby="new-title">
+    <h2 id="new-title">Neues Kopfgeld</h2>
+    <p class="sub">Trage den Gesuchten ein und lege die Belohnung fest.</p>
+    <div class="field">
+      <label for="player">Minecraft-Name des Gesuchten</label>
+      <input type="text" id="player" maxlength="16" autocomplete="off" spellcheck="false" placeholder="z. B. Billy_the_Kid">
+      <div class="hint" id="nameHint">3 bis 16 Zeichen: Buchstaben, Zahlen, Unterstrich.</div>
+    </div>
+    <div class="field">
+      <label for="amount">Belohnung in Diamanten</label>
+      <div class="amount-wrap">
+        <svg width="28" height="28" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><use href="#diamond"/></svg>
+        <input type="number" id="amount" min="1" max="2304" step="1" value="5" inputmode="numeric">
       </div>
-    </div>
-
-    <!-- Form -->
-    <div class="western-parchment p-5 sm:p-6 mb-7 relative">
-      <div class="iron-nail"></div>
-      <form id="bountyForm" class="space-y-4" onsubmit="handleFormSubmit(event)">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-bold text-[#5c3b20] uppercase tracking-wider mb-1.5 font-typewriter">Outlaw Name</label>
-            <div class="flex gap-2">
-              <input type="text" id="name" maxlength="24" placeholder="Steve" class="western-input flex-1 px-3 py-2.5 text-sm font-medium" required>
-              <img id="previewHead" src="https://mc-heads.net/avatar/Steve/40" class="western-portrait-frame w-10 h-10 object-cover shrink-0" alt="">
-            </div>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-[#5c3b20] uppercase tracking-wider mb-1.5 font-typewriter">Bounty (Diamonds)</label>
-            <div class="relative">
-              <input type="number" id="amount" min="1" max="999999" placeholder="64" class="western-input w-full px-3 py-2.5 text-sm font-medium" required>
-              <span id="stackHelper" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8a6a40] font-typewriter"></span>
-            </div>
-            <div class="flex gap-1.5 mt-2 flex-wrap">
-              <button type="button" onclick="setQuickAmount(16)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-bold">16</button>
-              <button type="button" onclick="setQuickAmount(64)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-bold">64</button>
-              <button type="button" onclick="setQuickAmount(128)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-bold">128</button>
-              <button type="button" onclick="setQuickAmount(256)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-bold">256</button>
-            </div>
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-[#5c3b20] uppercase tracking-wider mb-1.5 font-typewriter">Crime (optional)</label>
-          <input type="text" id="reason" maxlength="80" placeholder="Cattle rustling / griefing the farm..." class="western-input w-full px-3 py-2.5 text-sm">
-        </div>
-        <div class="flex flex-wrap gap-3 pt-1">
-          <button type="submit" class="btn-brass-nail px-6 py-2.5 text-sm font-bold tracking-wide uppercase">Nail Poster</button>
-          <button type="button" onclick="loadSampleBounties()" class="px-4 py-2.5 text-sm font-bold bg-[#3a2a1a] text-amber-200/80 border border-amber-700/40 hover:bg-[#4a3520] transition rounded">Load Sample Outlaws</button>
-        </div>
-      </form>
-    </div>
-
-    <!-- Bounty List -->
-    <div class="board-plank-well p-4 sm:p-5 min-h-[280px]">
-      <div id="bountyList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
-    </div>
-  </main>
-
-  <p class="mt-8 text-center text-xs text-amber-200/40 relative z-10 font-typewriter">
-    All bounties paid in Minecraft diamonds · Shared Sheriff Board
-  </p>
-
-  <!-- Modal -->
-  <div id="actionModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 transition-opacity duration-200">
-    <div id="actionModalCard" class="western-parchment max-w-sm w-full p-6 scale-95 transition-transform duration-200">
-      <div class="text-center mb-5">
-        <img id="modalAvatar" src="" class="western-portrait-frame w-16 h-16 mx-auto mb-3 object-cover" alt="">
-        <h3 id="modalTargetName" class="font-western text-xl text-[#261409]"></h3>
-        <p id="modalRewardText" class="text-sm text-[#5c4028] mt-1 font-typewriter"></p>
+      <div class="quick">
+        <button type="button" data-add="1">+1</button>
+        <button type="button" data-add="5">+5</button>
+        <button type="button" data-add="16">+16</button>
+        <button type="button" data-add="64">+64 (1 Stack)</button>
       </div>
-      <div class="flex flex-col gap-2.5">
-        <button id="confirmClaimBtn" class="btn-brass-nail w-full py-2.5 text-sm font-bold uppercase">Claim Bounty</button>
-        <button id="confirmRemoveBtn" class="w-full py-2.5 text-sm font-bold bg-red-900/15 text-red-900 border border-red-900/30 hover:bg-red-900/25 transition rounded">Tear Down Poster</button>
-        <button onclick="closeModal()" class="w-full py-2 text-sm text-[#5c4028]/70 hover:text-[#5c4028] transition">Cancel</button>
-      </div>
+      <div class="hint" id="amountHint"></div>
     </div>
-  </div>
+    <button type="button" class="primary" id="submit">Kopfgeld aussetzen</button>
+  </section>
 
-  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-xs"></div>
+  <section aria-labelledby="list-title">
+    <h3 class="board-title" id="list-title">Gesuchte Banditen</h3>
+    <p class="empty" id="empty">Das Brett ist leer. Noch ist es still in der Stadt.</p>
+    <ul id="list"></ul>
+  </section>
+</main>
 
-  <script>
-    // ====================== FIREBASE ======================
-    const firebaseConfig = {
-      apiKey: "AIzaSyCuIfJ9ON8opfjcSzGG_Dg9sNFbLFK4nNU",
-      authDomain: "mcbounty.firebaseapp.com",
-      databaseURL: "https://mcbounty-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "mcbounty",
-      storageBucket: "mcbounty.firebasestorage.app",
-      messagingSenderId: "414418458359",
-      appId: "1:414418458359:web:320059666010becbca25f2",
-      measurementId: "G-NMJCQWL5XB"
-    };
+<!-- Pixel-Diamant -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="diamond">
+      <rect x="2" y="0" width="4" height="1" fill="#b6fff6"/>
+      <rect x="1" y="1" width="6" height="1" fill="#4aedd9"/>
+      <rect x="0" y="2" width="8" height="1" fill="#4aedd9"/>
+      <rect x="0" y="3" width="8" height="1" fill="#2fc9b8"/>
+      <rect x="1" y="4" width="6" height="1" fill="#2fc9b8"/>
+      <rect x="2" y="5" width="4" height="1" fill="#1b9e91"/>
+      <rect x="3" y="6" width="2" height="1" fill="#1b9e91"/>
+      <rect x="2" y="1" width="2" height="1" fill="#b6fff6"/>
+      <rect x="1" y="2" width="1" height="1" fill="#b6fff6"/>
+    </g>
+  </defs>
+</svg>
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const bountiesRef = db.ref('bounties');
+<script>
+(function () {
+  var STORAGE_KEY = "mc-bounties";
+  var NAME_RE = /^[A-Za-z0-9_]{3,16}$/;
+  var MAX = 2304; // 36 Slots x 64 Diamanten
+  var EASE = "cubic-bezier(.22, 1, .36, 1)";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    let bounties = [];
-    let newlyAddedId = null;
-    let pendingModalId = null;
+  var nameEl = document.getElementById("player");
+  var amountEl = document.getElementById("amount");
+  var nameHint = document.getElementById("nameHint");
+  var amountHint = document.getElementById("amountHint");
+  var listEl = document.getElementById("list");
+  var emptyEl = document.getElementById("empty");
+  var formEl = document.getElementById("form");
+  var submitBtn = document.getElementById("submit");
 
-    const FALLBACK_AVATAR = 'https://mc-heads.net/avatar/Steve/64';
+  var bounties = load();
+  var nodes = {}; // name -> { li, num, stacks, reward, shown, tilt }
 
-    // Live listener
-    bountiesRef.on('value', (snapshot) => {
-      const data = snapshot.val() || {};
-      bounties = Object.keys(data).map(key => ({
-        id: key,
-        ...data[key]
-      })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  /* ---------- Speicher ---------- */
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      var data = raw ? JSON.parse(raw) : [];
+      return Array.isArray(data) ? data : [];
+    } catch (e) { return []; }
+  }
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(bounties)); } catch (e) {}
+  }
 
-      document.getElementById('syncStatus').textContent = 'Live';
-      renderBoard(false);
-    }, (error) => {
-      console.error(error);
-      document.getElementById('syncStatus').textContent = 'Error';
-      showToast('Connection to the Sheriff Office failed', 'warning');
-    });
+  /* ---------- Hilfen ---------- */
+  function stacks(n) {
+    var s = Math.floor(n / 64), r = n % 64;
+    if (s === 0) return "";
+    return s + (s === 1 ? " Stack" : " Stacks") + (r ? " + " + r : "");
+  }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function hash(str) {
+    var h = 0;
+    for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
+  function wiggle(target) {
+    if (reduce) return;
+    target.animate(
+      [{ translate: "0 0" }, { translate: "-7px 0" }, { translate: "6px 0" }, { translate: "-4px 0" }, { translate: "2px 0" }, { translate: "0 0" }],
+      { duration: 420, easing: "ease-out" }
+    );
+  }
 
-    function formatStacks(amount) {
-      if (amount < 64) return '';
-      const stacks = Math.floor(amount / 64);
-      const leftover = amount % 64;
-      return leftover ? `${stacks}s + ${leftover}` : `${stacks} stacks`;
+  /* ---------- Hochzählen der Belohnung ---------- */
+  function countTo(n, to) {
+    var from = n.shown;
+    n.shown = to;
+    if (reduce || from === to) { n.num.textContent = to; return; }
+    var t0 = performance.now(), dur = 800;
+    (function step(t) {
+      var k = Math.min(1, (t - t0) / dur);
+      var e = 1 - Math.pow(1 - k, 3);
+      n.num.textContent = Math.round(from + (to - from) * e);
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+    if (from > 0) {
+      n.reward.animate([{ scale: 1 }, { scale: 1.28 }, { scale: 1 }], { duration: 520, easing: EASE });
     }
+  }
 
-    function renderBoard(useFlip = false) {
-      const list = document.getElementById('bountyList');
+  /* ---------- Karten bauen ---------- */
+  function build(b) {
+    var li = el("li", "paper poster");
+    var tilt = ((hash(b.name) % 7) - 3) * 0.55;
+    li.style.setProperty("--tilt", tilt + "deg");
+    li.style.setProperty("--sway", (6 + (hash(b.name) % 40) / 10) + "s");
+    li.style.animationDelay = "-" + ((hash(b.name) % 60) / 10) + "s";
 
-      document.getElementById('statCount').textContent = bounties.length;
-      const total = bounties.reduce((sum, b) => sum + (b.amount || 0), 0);
-      document.getElementById('statPool').textContent = total.toLocaleString() + ' ♦';
+    li.appendChild(el("p", "wanted", "Gesucht"));
+    li.appendChild(el("div", "dead", "TOT ODER LEBENDIG"));
 
-      if (bounties.length === 0) {
-        list.innerHTML = `
-          <div class="col-span-full text-center py-16 text-amber-200/50">
-            <div class="text-4xl mb-3 opacity-40">📜</div>
-            <p class="text-sm font-typewriter">No active wanted posters.<br>Be the first to nail one up.</p>
-          </div>`;
-        return;
-      }
-
-      list.innerHTML = bounties.map((b, i) => {
-        const rot = ((i * 7) % 5 - 2) * 0.7;
-        const avatarUrl = `https://mc-heads.net/avatar/${encodeURIComponent(b.name)}/64`;
-        const stackStr = formatStacks(b.amount);
-        const isNew = b.id === newlyAddedId;
-
-        return `
-          <article
-            data-bounty-id="${b.id}"
-            class="bounty-card group ${isNew ? 'animate-poster-slap' : ''}"
-            style="--base-rot: ${rot}deg; transform: rotate(${rot}deg);"
-            onmousemove="handleCardTilt(event, this)"
-            onmouseleave="resetCardTilt(this)"
-          >
-            <div class="iron-nail"></div>
-            <div class="bounty-card-inner">
-              <div class="card-sheen"></div>
-              <div class="captured-stamp">CAPTURED</div>
-
-              <div class="relative z-10 flex justify-end mb-1">
-                <button type="button" onclick="openResolveModal('${b.id}')"
-                  class="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-red-900/75 hover:text-red-950 bg-red-900/10 hover:bg-red-900/20 border border-red-900/15 transition">
-                  <span>Resolve</span>
-                </button>
-              </div>
-
-              <div class="text-center border-y border-red-900/25 py-1 mb-3 bg-red-950/[0.04]">
-                <span class="font-western text-xs font-black tracking-[0.28em] text-[#8f1d1d] uppercase">Wanted</span>
-              </div>
-
-              <div class="flex flex-col items-center text-center my-2">
-                <div class="relative mb-2.5">
-                  <img src="${avatarUrl}" alt="${escapeHtml(b.name)}"
-                    onerror="this.onerror=null; this.src='${FALLBACK_AVATAR}';"
-                    class="western-portrait-frame w-16 h-16 object-cover transition-transform duration-300 group-hover:scale-105">
-                </div>
-                <h4 class="font-western text-lg sm:text-xl text-[#241105] leading-snug break-words max-w-full px-1">
-                  ${escapeHtml(b.name)}
-                </h4>
-                <p class="mt-1.5 font-typewriter text-xs font-bold text-[#5c381c] line-clamp-2 px-2">
-                  ${b.reason ? `“${escapeHtml(b.reason)}”` : '“Wanted for Frontier Lawlessness”'}
-                </p>
-              </div>
-
-              <div class="relative z-10 mt-3 pt-2 border-t border-dashed border-amber-950/30 space-y-2">
-                <div class="text-center font-typewriter text-[10px] font-bold uppercase tracking-[0.24em] text-[#5c381c]">— Reward —</div>
-                <div class="mc-diamond-plaque px-3 py-2 flex items-center justify-between gap-2">
-                  <div class="flex items-center gap-2 min-w-0">
-                    <svg class="w-5 h-5 shrink-0 drop-shadow-[0_0_6px_rgba(77,238,234,0.75)]" viewBox="0 0 16 16" shape-rendering="crispEdges">
-                      <path fill="#0e4f5c" d="M6 2h4v1h2v1h1v2h1v4h-1v2h-1v1h-2v1H6v-1H4v-1H3v-2H2V6h1V4h1V3h2V2z"/>
-                      <path fill="#1cbec9" d="M6 3h4v1h2v2h1v4h-1v2h-2v1H6v-1H4v-2H3V6h1V4h2V3z"/>
-                      <path fill="#6ef7f7" d="M6 4h4v1h1v2H9v2H7V7H5V5h1V4z"/>
-                      <path fill="#d4ffff" d="M6 4h2v2H6V4zm-1 2h1v1H5V6z"/>
-                    </svg>
-                    <span class="font-pixel text-[11px] sm:text-xs text-[#f7e39c] truncate">
-                      ${Number(b.amount).toLocaleString()} <span class="font-typewriter text-xs font-bold text-cyan-300">DIAMONDS</span>
-                    </span>
-                  </div>
-                  ${stackStr ? `<span class="shrink-0 px-1.5 py-0.5 text-[10px] font-typewriter font-bold bg-cyan-400/15 text-cyan-200 border border-cyan-400/35">${stackStr}</span>` : ''}
-                </div>
-                <button type="button" onclick="claimBountyDirect('${b.id}')"
-                  class="w-full py-2 px-3 font-western text-xs tracking-wider uppercase bg-[#8f1d16] hover:bg-[#a8221a] active:translate-y-0.5 text-amber-100 border-t-2 border-l-2 border-red-400/45 border-r-2 border-b-2 border-[#470a06] shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
-                  <span>★</span><span>Claim Bounty</span>
-                </button>
-              </div>
-            </div>
-          </article>
-        `;
-      }).join('');
-
-      newlyAddedId = null;
-    }
-
-    function handleCardTilt(e, card) {
-      if (card.classList.contains('animate-poster-tear') || card.classList.contains('is-captured')) return;
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const px = x / rect.width;
-      const py = y / rect.height;
-      const rotateY = (px - 0.5) * 11;
-      const rotateX = (0.5 - py) * 11;
-      card.style.setProperty('--mx', `${(px * 100).toFixed(1)}%`);
-      card.style.setProperty('--my', `${(py * 100).toFixed(1)}%`);
-      card.style.transition = 'transform 0.08s ease-out';
-      card.style.transform = `perspective(900px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-5px) scale(1.02)`;
-      card.style.zIndex = '20';
-    }
-
-    function resetCardTilt(card) {
-      if (card.classList.contains('animate-poster-tear') || card.classList.contains('is-captured')) return;
-      card.style.transition = 'transform 0.35s cubic-bezier(0.22,1,0.36,1)';
-      card.style.transform = 'rotate(var(--base-rot, 0deg))';
-      card.style.zIndex = '';
-    }
-
-    const nameInputEl = document.getElementById('name');
-    const amountInputEl = document.getElementById('amount');
-    const reasonInputEl = document.getElementById('reason');
-    const previewHeadEl = document.getElementById('previewHead');
-    const stackHelperEl = document.getElementById('stackHelper');
-
-    let avatarDebounce;
-    nameInputEl.addEventListener('input', () => {
-      clearTimeout(avatarDebounce);
-      const val = nameInputEl.value.trim();
-      avatarDebounce = setTimeout(() => {
-        previewHeadEl.src = `https://mc-heads.net/avatar/${encodeURIComponent(val || 'Steve')}/40`;
-      }, 240);
-    });
-
-    amountInputEl.addEventListener('input', () => {
-      const val = parseInt(amountInputEl.value, 10);
-      stackHelperEl.textContent = (val && val >= 64) ? `= ${formatStacks(val)}` : '';
-    });
-
-    function setQuickAmount(val) {
-      amountInputEl.value = val;
-      amountInputEl.dispatchEvent(new Event('input'));
-      amountInputEl.focus();
-    }
-
-    function handleFormSubmit(e) {
-      e.preventDefault();
-      const name = nameInputEl.value.trim();
-      const amount = parseInt(amountInputEl.value, 10);
-      const reason = reasonInputEl.value.trim();
-
-      if (!name) { showToast('Name the outlaw first, partner!', 'warning'); nameInputEl.focus(); return; }
-      if (!amount || amount < 1) { showToast('Put at least 1 diamond on their head!', 'warning'); amountInputEl.focus(); return; }
-
-      const newRef = bountiesRef.push();
-      newlyAddedId = newRef.key;
-      newRef.set({
-        name,
-        amount,
-        reason,
-        createdAt: Date.now()
-      });
-
-      // Hammer thud
-      const boardEl = document.getElementById('mainBoard');
-      boardEl.classList.remove('animate-board-thud');
-      void boardEl.offsetWidth;
-      boardEl.classList.add('animate-board-thud');
-
-      nameInputEl.value = '';
-      amountInputEl.value = '';
-      reasonInputEl.value = '';
-      stackHelperEl.textContent = '';
-      previewHeadEl.src = 'https://mc-heads.net/avatar/Steve/40';
-
-      showToast(`Wanted poster nailed up for ${name} (${amount.toLocaleString()} ♦)`, 'success');
-    }
-
-    function claimBountyDirect(id) {
-      resolveBounty(id, true);
-    }
-
-    function openResolveModal(id) {
-      const bounty = bounties.find(b => b.id === id);
-      if (!bounty) return;
-      pendingModalId = id;
-      document.getElementById('modalAvatar').src = `https://mc-heads.net/avatar/${encodeURIComponent(bounty.name)}/64`;
-      document.getElementById('modalTargetName').textContent = bounty.name;
-      document.getElementById('modalRewardText').textContent = `${Number(bounty.amount).toLocaleString()} Diamonds Reward`;
-      document.getElementById('confirmClaimBtn').onclick = () => resolveBounty(id, true);
-      document.getElementById('confirmRemoveBtn').onclick = () => resolveBounty(id, false);
-
-      const modal = document.getElementById('actionModal');
-      const card = document.getElementById('actionModalCard');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      requestAnimationFrame(() => {
-        modal.classList.remove('opacity-0');
-        card.classList.remove('scale-95');
-        card.classList.add('scale-100');
-      });
-    }
-
-    function closeModal() {
-      const modal = document.getElementById('actionModal');
-      const card = document.getElementById('actionModalCard');
-      modal.classList.add('opacity-0');
-      card.classList.remove('scale-100');
-      card.classList.add('scale-95');
-      setTimeout(() => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        pendingModalId = null;
-      }, 200);
-    }
-
-    document.getElementById('actionModal').addEventListener('click', e => { if (e.target.id === 'actionModal') closeModal(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && pendingModalId) closeModal(); });
-
-    function resolveBounty(id, isClaimed) {
-      const index = bounties.findIndex(b => b.id === id);
-      if (index === -1) { closeModal(); return; }
-
-      const targetBounty = bounties[index];
-      const cardEl = document.querySelector(`[data-bounty-id="${id}"]`);
-      if (pendingModalId) closeModal();
-
-      if (cardEl) {
-        const rect = cardEl.getBoundingClientRect();
-        if (isClaimed) {
-          cardEl.classList.add('is-captured');
-          spawnCelebrationBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
-        }
-
-        const delayBeforeTear = isClaimed ? 340 : 0;
-        setTimeout(() => {
-          cardEl.classList.add('animate-poster-tear');
-          setTimeout(() => {
-            bountiesRef.child(id).remove();
-            showToast(isClaimed 
-              ? `Outlaw captured! Claimed ${Number(targetBounty.amount).toLocaleString()} ♦ for ${targetBounty.name}.` 
-              : `Tore down wanted poster for ${targetBounty.name}.`, 
-              isClaimed ? 'diamond' : 'neutral');
-          }, 380);
-        }, delayBeforeTear);
+    var photo = el("div", "photo");
+    var img = document.createElement("img");
+    img.alt = "Kopf von " + b.name;
+    // Verwende hochauflösende 3D-Bust-Render (Crafthead) statt blockiger Pixel-Helme
+    img.src = "https://crafthead.net/bust/" + encodeURIComponent(b.name) + "/128.png";
+    img.onerror = function () {
+      if (!img.src.includes("minotar")) {
+        img.src = "https://minotar.net/helm/" + encodeURIComponent(b.name) + "/128.png";
       } else {
-        bountiesRef.child(id).remove();
+        img.removeAttribute("src");
       }
-    }
-
-    function loadSampleBounties() {
-      const samples = [
-        { name: 'Herobrine', amount: 576, reason: 'Haunting the mines' },
-        { name: 'Technoblade', amount: 256, reason: 'Unstoppable PvP dominance' },
-        { name: 'Creeper', amount: 16, reason: 'Destroying the wheat farm again' }
-      ];
-      const now = Date.now();
-      samples.forEach((s, idx) => {
-        bountiesRef.push().set({
-          name: s.name,
-          amount: s.amount,
-          reason: s.reason,
-          createdAt: now - idx * 3000
-        });
-      });
-      showToast('Nailed 3 classic frontier wanted posters!', 'success');
-    }
-
-    function showToast(message, type = 'neutral') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      const styles = {
-        success: 'bg-[#2b1a0c] border-amber-400/65 text-amber-100',
-        diamond: 'bg-[#122b30] border-cyan-400/65 text-cyan-100',
-        warning: 'bg-[#3d1710] border-red-400/65 text-amber-100',
-        neutral: 'bg-[#26150a] border-amber-500/40 text-amber-100'
-      };
-      toast.className = `toast-enter pointer-events-auto flex items-center gap-3 px-4 py-3 border-t-2 border-l-2 border-r-2 border-b-2 shadow-2xl backdrop-blur-md font-typewriter text-xs sm:text-sm font-bold ${styles[type] || styles.neutral}`;
-      toast.innerHTML = `<span class="text-sm shrink-0 ${type === 'diamond' ? 'text-cyan-300' : 'text-amber-400'}">★</span><span class="flex-1 leading-snug">${escapeHtml(message)}</span>`;
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(8px)';
-        setTimeout(() => toast.remove(), 260);
-      }, 3400);
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    // Particles
-    const ambientCanvas = document.getElementById('ambientCanvas');
-    const aCtx = ambientCanvas.getContext('2d');
-    const burstCanvas = document.getElementById('burstCanvas');
-    const bCtx = burstCanvas.getContext('2d');
-    let dustMotes = [];
-    let celebrationParticles = [];
-
-    function resizeCanvases() {
-      ambientCanvas.width = window.innerWidth;
-      ambientCanvas.height = window.innerHeight;
-      burstCanvas.width = window.innerWidth;
-      burstCanvas.height = window.innerHeight;
-    }
-
-    function initDustMotes() {
-      const count = Math.min(44, Math.floor(window.innerWidth / 28));
-      dustMotes = Array.from({ length: count }, () => ({
-        x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight,
-        r: Math.random() * 2.2 + 0.7, vx: Math.random() * 0.35 + 0.08,
-        vy: -(Math.random() * 0.25 + 0.05), alpha: Math.random() * 0.45 + 0.14, phase: Math.random() * Math.PI * 2
-      }));
-    }
-
-    function spawnCelebrationBurst(cx, cy) {
-      for (let i = 0; i < 40; i++) {
-        const angle = (Math.PI * 2 * i) / 40 + (Math.random() - 0.5) * 0.3;
-        const speed = Math.random() * 7 + 2.5;
-        celebrationParticles.push({
-          x: cx, y: cy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2.4,
-          size: Math.random() * 6.5 + 4.5, rot: Math.random() * Math.PI, vRot: (Math.random() - 0.5) * 0.22,
-          life: 1, decay: Math.random() * 0.017 + 0.013, isDiamond: i % 2 === 0,
-          color: i % 3 === 0 ? '#a5f3fc' : i % 2 === 0 ? '#22d3ee' : '#f59e0b'
-        });
-      }
-    }
-
-    function animateCanvases() {
-      aCtx.clearRect(0, 0, ambientCanvas.width, ambientCanvas.height);
-      for (const p of dustMotes) {
-        p.x += p.vx; p.y += p.vy + Math.sin(p.phase) * 0.16; p.phase += 0.018;
-        if (p.x > ambientCanvas.width + 10) { p.x = -10; p.y = Math.random() * ambientCanvas.height; }
-        if (p.y < -10) p.y = ambientCanvas.height + 10;
-        const blockSize = Math.max(2, Math.round(p.r * 1.8));
-        aCtx.fillStyle = `rgba(245, 185, 95, ${p.alpha * (0.65 + 0.35 * Math.sin(p.phase))})`;
-        aCtx.fillRect(Math.round(p.x), Math.round(p.y), blockSize, blockSize);
-      }
-
-      bCtx.clearRect(0, 0, burstCanvas.width, burstCanvas.height);
-      for (let i = celebrationParticles.length - 1; i >= 0; i--) {
-        const d = celebrationParticles[i];
-        d.x += d.vx; d.y += d.vy; d.vy += 0.22; d.vx *= 0.98; d.rot += d.vRot; d.life -= d.decay;
-        if (d.life <= 0) { celebrationParticles.splice(i, 1); continue; }
-        bCtx.save(); bCtx.translate(Math.round(d.x), Math.round(d.y)); bCtx.rotate(d.rot); bCtx.globalAlpha = Math.max(0, d.life);
-        bCtx.fillStyle = d.color;
-        if (d.isDiamond) {
-          bCtx.beginPath(); bCtx.moveTo(0, -d.size); bCtx.lineTo(d.size * 0.75, 0); bCtx.lineTo(0, d.size); bCtx.lineTo(-d.size * 0.75, 0); bCtx.closePath(); bCtx.fill();
-        } else {
-          const s = Math.round(d.size * 1.15); bCtx.fillRect(-s/2, -s/2, s, s);
-        }
-        bCtx.restore();
-      }
-      requestAnimationFrame(animateCanvases);
-    }
-
-    window.addEventListener('resize', resizeCanvases);
-    window.onload = function () {
-      resizeCanvases();
-      initDustMotes();
-      animateCanvases();
     };
-  </script>
+    photo.appendChild(img);
+    li.appendChild(photo);
+
+    li.appendChild(el("div", "name", b.name));
+    li.appendChild(el("p", "label", "Belohnung"));
+
+    var reward = el("div", "reward");
+    var ns = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("width", "28"); svg.setAttribute("height", "28");
+    svg.setAttribute("viewBox", "0 0 8 8");
+    svg.setAttribute("shape-rendering", "crispEdges");
+    svg.setAttribute("aria-hidden", "true");
+    var use = document.createElementNS(ns, "use");
+    use.setAttribute("href", "#diamond");
+    svg.appendChild(use);
+    reward.appendChild(svg);
+
+    var num = el("span", "", "0");
+    reward.appendChild(num);
+    li.appendChild(reward);
+
+    var st = el("div", "stacks", "");
+    li.appendChild(st);
+
+    var btn = el("button", "", "Eingelöst");
+    btn.type = "button";
+    btn.setAttribute("aria-label", "Kopfgeld auf " + b.name + " als eingelöst entfernen");
+    btn.addEventListener("click", function () { removeBounty(b.name, btn); });
+    li.appendChild(btn);
+
+    li.appendChild(el("div", "stamp", "ERLEDIGT"));
+
+    return { li: li, num: num, stacks: st, reward: reward, shown: 0, tilt: tilt };
+  }
+
+  /* ---------- FLIP: Karten gleiten an ihren neuen Platz ---------- */
+  function snapshot() {
+    var s = {};
+    Object.keys(nodes).forEach(function (k) { s[k] = nodes[k].li.getBoundingClientRect(); });
+    return s;
+  }
+  function flip(prev, skip) {
+    if (reduce) return;
+    Object.keys(nodes).forEach(function (k) {
+      if (k === skip || !prev[k]) return;
+      var r = nodes[k].li.getBoundingClientRect();
+      var dx = prev[k].left - r.left, dy = prev[k].top - r.top;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      nodes[k].li.animate(
+        [{ translate: dx + "px " + dy + "px" }, { translate: "0 0" }],
+        { duration: 700, easing: EASE }
+      );
+    });
+  }
+
+  /* ---------- Plakat fällt von oben an den Nagel ---------- */
+  function enter(n, delay) {
+    if (reduce) return;
+    var t = n.tilt;
+    n.li.animate([
+      { opacity: 0, translate: "0 -110px", rotate: (t - 9) + "deg", offset: 0 },
+      { opacity: 1, translate: "0 8px", rotate: (t + 3.5) + "deg", offset: .5 },
+      { translate: "0 0", rotate: (t - 1.6) + "deg", offset: .75 },
+      { translate: "0 0", rotate: t + "deg", offset: 1 }
+    ], { duration: 1200, delay: delay || 0, easing: EASE, fill: "backwards" });
+  }
+
+  function updateEmpty() {
+    emptyEl.style.display = Object.keys(nodes).length ? "none" : "block";
+  }
+
+  function render(initial) {
+    bounties.sort(function (a, b) { return b.diamonds - a.diamonds; });
+    var prev = snapshot();
+    var fresh = [];
+
+    bounties.forEach(function (b) {
+      if (!nodes[b.name]) {
+        nodes[b.name] = build(b);
+        fresh.push(b.name);
+      }
+    });
+
+    bounties.forEach(function (b, i) {
+      var li = nodes[b.name].li;
+      if (listEl.children[i] !== li) listEl.insertBefore(li, listEl.children[i] || null);
+    });
+
+    bounties.forEach(function (b) {
+      var n = nodes[b.name];
+      countTo(n, b.diamonds);
+      var s = stacks(b.diamonds);
+      n.stacks.textContent = s ? "(" + s + ")" : "";
+    });
+
+    updateEmpty();
+    flip(prev);
+    fresh.forEach(function (name, i) {
+      enter(nodes[name], initial ? 950 + i * 130 : 0);
+    });
+  }
+
+  /* ---------- Einlösen: Stempel, dann Plakat fällt weg ---------- */
+  function removeBounty(name, btn) {
+    var n = nodes[name];
+    if (!n || n.leaving) return;
+    n.leaving = true;
+    btn.disabled = true;
+    bounties = bounties.filter(function (b) { return b.name !== name; });
+    save();
+    n.li.classList.add("leaving");
+
+    setTimeout(function () {
+      var prev = snapshot();
+      function done() {
+        n.li.remove();
+        delete nodes[name];
+        updateEmpty();
+        flip(prev, name);
+      }
+      if (reduce) { done(); return; }
+      var a = n.li.animate([
+        { opacity: 1, translate: "0 0", filter: "none" },
+        { opacity: 0, translate: "0 60px", filter: "blur(4px) brightness(.3)" }
+      ], { duration: 600, easing: "cubic-bezier(.5, 0, .75, 0)", fill: "forwards" });
+      a.onfinish = done;
+    }, reduce ? 0 : 900);
+  }
+
+  /* ---------- Eingabe ---------- */
+  function updateAmountHint() {
+    var n = parseInt(amountEl.value, 10);
+    amountHint.className = "hint";
+    if (isNaN(n) || n < 1) { amountHint.textContent = "Mindestens 1 Diamant."; return; }
+    if (n > MAX) { amountHint.textContent = "Maximal " + MAX + " Diamanten (36 Stacks)."; return; }
+    amountHint.textContent = stacks(n);
+  }
+
+  function submit() {
+    var name = nameEl.value.trim();
+    var n = parseInt(amountEl.value, 10);
+    var ok = true;
+
+    nameHint.className = "hint";
+    if (!NAME_RE.test(name)) {
+      nameHint.className = "hint error";
+      nameHint.textContent = "Ungültiger Name. Erlaubt sind 3 bis 16 Zeichen: Buchstaben, Zahlen, Unterstrich.";
+      wiggle(nameEl);
+      ok = false;
+    } else {
+      nameHint.textContent = "3 bis 16 Zeichen: Buchstaben, Zahlen, Unterstrich.";
+    }
+    if (isNaN(n) || n < 1 || n > MAX) {
+      amountHint.className = "hint error";
+      amountHint.textContent = "Gib eine Zahl zwischen 1 und " + MAX + " ein.";
+      wiggle(amountEl);
+      ok = false;
+    }
+    if (!ok) return;
+
+    var existing = bounties.filter(function (b) { return b.name.toLowerCase() === name.toLowerCase(); })[0];
+    if (existing) {
+      existing.diamonds = Math.min(MAX * 10, existing.diamonds + n);
+    } else {
+      bounties.push({ name: name, diamonds: n });
+    }
+    save();
+    render(false);
+
+    if (!reduce) {
+      formEl.animate([{ translate: "0 0" }, { translate: "0 5px" }, { translate: "0 0" }], { duration: 320, easing: EASE });
+      submitBtn.animate([{ scale: 1 }, { scale: .96 }, { scale: 1 }], { duration: 320, easing: EASE });
+    }
+    nameEl.value = "";
+    nameHint.textContent = "Kopfgeld auf " + name + " ausgesetzt.";
+    nameEl.focus();
+  }
+
+  document.querySelectorAll("[data-add]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var cur = parseInt(amountEl.value, 10) || 0;
+      amountEl.value = Math.min(MAX, cur + parseInt(b.getAttribute("data-add"), 10));
+      updateAmountHint();
+    });
+  });
+  amountEl.addEventListener("input", updateAmountHint);
+  submitBtn.addEventListener("click", submit);
+  nameEl.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
+
+  /* ---------- Laternenlicht folgt dem Zeiger ---------- */
+  var light = document.getElementById("light");
+  var tx = window.innerWidth / 2, ty = window.innerHeight * 0.35, cx = tx, cy = ty;
+  window.addEventListener("pointermove", function (e) {
+    tx = e.clientX; ty = e.clientY;
+    if (reduce) {
+      light.style.setProperty("--mx", tx + "px");
+      light.style.setProperty("--my", ty + "px");
+    }
+  }, { passive: true });
+  if (!reduce) {
+    (function loop(t) {
+      cx += (tx - cx) * 0.08;
+      cy += (ty - cy) * 0.08;
+      var r = 430 + 12 * Math.sin(t / 230) + 8 * Math.sin(t / 97);
+      light.style.setProperty("--mx", cx.toFixed(1) + "px");
+      light.style.setProperty("--my", cy.toFixed(1) + "px");
+      light.style.setProperty("--r", r.toFixed(1) + "px");
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
+  /* ---------- Staub ---------- */
+  if (!reduce) {
+    var dust = document.getElementById("dust");
+    for (var i = 0; i < 26; i++) {
+      var p = document.createElement("i");
+      p.style.setProperty("--x", (Math.random() * 100) + "%");
+      p.style.setProperty("--s", (2 + Math.random() * 2.5) + "px");
+      p.style.setProperty("--d", (16 + Math.random() * 22) + "s");
+      p.style.setProperty("--l", "-" + (Math.random() * 30) + "s");
+      p.style.setProperty("--dx", (Math.random() * 160 - 80) + "px");
+      dust.appendChild(p);
+    }
+  }
+
+  updateAmountHint();
+  render(true);
+})();
+</script>
 </body>
 </html>
