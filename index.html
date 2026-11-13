@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minecraft Bounty Board</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #1a120b;
+      background-image: 
+        radial-gradient(ellipse at top, #2a1c12 0%, transparent 60%),
+        linear-gradient(180deg, #1a120b 0%, #0f0a06 100%);
+      color: #f0e6d2;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* subtle wood grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #e8d5a3;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+      margin-bottom: 6px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: #b8a07a;
+      margin-bottom: 40px;
+      letter-spacing: 0.04em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .board {
+      width: 100%;
+      max-width: 860px;
+      background: linear-gradient(145deg, #4a3220, #3a2618);
+      border: 1px solid #5c4030;
+      border-radius: 12px;
+      box-shadow: 
+        0 25px 50px -12px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      padding: 32px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* soft wood texture on board */
+    .board::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 18px,
+        rgba(0,0,0,0.04) 18px,
+        rgba(0,0,0,0.04) 20px
+      );
+      pointer-events: none;
+    }
+
+    .form-section {
+      background: linear-gradient(180deg, #f8f0e0 0%, #f0e6d0 100%);
+      color: #3a2a1a;
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin-bottom: 36px;
+      box-shadow: 
+        0 8px 20px rgba(0,0,0,0.25),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+      position: relative;
+    }
+
+    .form-section::after {
+      content: '📌';
+      position: absolute;
+      top: -14px;
+      left: 24px;
+      font-size: 1.6rem;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+    }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #5a4530;
+      margin-bottom: 8px;
+      letter-spacing: 0.03em;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      border: 1.5px solid #c9b48a;
+      border-radius: 8px;
+      background: #fffcf5;
+      color: #2a1c10;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #a07840;
+      box-shadow: 0 0 0 3px rgba(160, 120, 64, 0.2);
+    }
+
+    button.post-btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: linear-gradient(180deg, #5a8c2e, #457022);
+      color: #f0f8e0;
+      border: none;
+      border-radius: 8px;
+      padding: 13px 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #2d4a15, 0 6px 12px rgba(0,0,0,0.2);
+      transition: all 0.15s ease;
+      letter-spacing: 0.03em;
+    }
+
+    button.post-btn:hover {
+      background: linear-gradient(180deg, #6aa038, #528028);
+      transform: translateY(-1px);
+      box-shadow: 0 5px 0 #2d4a15, 0 8px 16px rgba(0,0,0,0.25);
+    }
+
+    button.post-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #2d4a15;
+    }
+
+    .bounties {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 22px;
+    }
+
+    .bounty-card {
+      background: linear-gradient(165deg, #faf4e6, #f2e8d4);
+      color: #2c1e12;
+      border-radius: 8px;
+      padding: 22px 18px 18px;
+      position: relative;
+      box-shadow: 
+        0 6px 16px rgba(0,0,0,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.7);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border: 1px solid #e0d4b8;
+    }
+
+    .bounty-card:nth-child(odd) {
+      transform: rotate(-0.8deg);
+    }
+
+    .bounty-card:nth-child(even) {
+      transform: rotate(0.9deg);
+    }
+
+    .bounty-card:hover {
+      transform: rotate(0deg) translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+      z-index: 5;
+    }
+
+    .bounty-card .pin {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.4rem;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25));
+    }
+
+    .bounty-card h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      text-align: center;
+      color: #8b1a1a;
+      margin: 8px 0 16px;
+      word-break: break-word;
+      letter-spacing: 0.02em;
+    }
+
+    .reward {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #2c1e12;
+      color: #e8c96a;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 10px 12px;
+      border-radius: 6px;
+      letter-spacing: 0.02em;
+    }
+
+    .diamond {
+      width: 14px;
+      height: 14px;
+      background: linear-gradient(135deg, #7ef0f8, #2ec4d0);
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      box-shadow: inset 1px 1px 0 rgba(255,255,255,0.5);
+      flex-shrink: 0;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: transparent;
+      border: none;
+      color: #a05050;
+      font-size: 1.1rem;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.15s, color 0.15s;
+      line-height: 1;
+      padding: 2px 6px;
+    }
+
+    .delete-btn:hover {
+      opacity: 1;
+      color: #c03030;
+    }
+
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 50px 20px;
+      color: #a09070;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .footer {
+      margin-top: 36px;
+      font-size: 0.75rem;
+      color: #6a5a45;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (max-width: 600px) {
+      .board {
+        padding: 20px;
+      }
+      .form-section {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>⚔ Bounty Board ⚔</h1>
+  <p class="subtitle">Wanted — Dead or Alive (preferably with diamonds)</p>
+
+  <div class="board">
+    <div class="form-section">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">Target Name</label>
+          <input type="text" id="name" placeholder="Steve" maxlength="24">
+        </div>
+        <div class="form-group">
+          <label for="amount">Bounty (♦ Diamonds)</label>
+          <input type="number" id="amount" placeholder="64" min="1" max="99999">
+        </div>
+      </div>
+      <button class="post-btn" onclick="addBounty()">Post Bounty</button>
+    </div>
+
+    <div class="bounties" id="bountyList">
+      <div class="empty">No bounties posted yet...<br>Be the first to put a price on someone's head.</div>
+    </div>
+  </div>
+
+  <p class="footer">All bounties paid in Minecraft diamonds · Not affiliated with Mojang</p>
+
+  <script>
+    let bounties = JSON.parse(localStorage.getItem('mcBounties') || '[]');
+
+    function render() {
+      const list = document.getElementById('bountyList');
+      
+      if (bounties.length === 0) {
+        list.innerHTML = `<div class="empty">No bounties posted yet...<br>Be the first to put a price on someone's head.</div>`;
+        return;
+      }
+
+      list.innerHTML = bounties.map((b, i) => `
+        <div class="bounty-card">
+          <div class="pin">📌</div>
+          <button class="delete-btn" onclick="removeBounty(${i})" title="Remove">×</button>
+          <h3>${escapeHtml(b.name)}</h3>
+          <div class="reward">
+            <span class="diamond"></span>
+            ${b.amount.toLocaleString()} Diamonds
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addBounty() {
+      const nameInput = document.getElementById('name');
+      const amountInput = document.getElementById('amount');
+      
+      const name = nameInput.value.trim();
+      const amount = parseInt(amountInput.value);
+
+      if (!name) {
+        alert('Enter a name, adventurer!');
+        return;
+      }
+      if (!amount || amount < 1) {
+        alert('Bounty must be at least 1 diamond!');
+        return;
+      }
+
+      bounties.unshift({ name, amount });
+      localStorage.setItem('mcBounties', JSON.stringify(bounties));
+      
+      nameInput.value = '';
+      amountInput.value = '';
+      render();
+    }
+
+    function removeBounty(index) {
+      if (confirm('Remove this bounty?')) {
+        bounties.splice(index, 1);
+        localStorage.setItem('mcBounties', JSON.stringify(bounties));
+        render();
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    document.getElementById('name').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addBounty();
+    });
+    document.getElementById('amount').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addBounty();
+    });
+
+    render();
+  </script>
+</body>
+</html>
