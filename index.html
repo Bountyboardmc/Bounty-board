@@ -33,8 +33,17 @@
     padding: 36px 16px 80px;
     overflow-x: hidden;
     background:
-      repeating-linear-gradient(90deg, transparent 0 138px, var(--wood-line) 138px 142px),
-      repeating-linear-gradient(0deg, rgba(0,0,0,.25) 0 2px, transparent 2px 7px),
+      /* Holzmuster-Rillen */
+      repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 5px),
+      /* Realistische Holzbohlen */
+      repeating-linear-gradient(90deg, 
+        #060201 0px, 
+        #0d0603 3px, 
+        #1c0f07 18px, 
+        #140a04 125px, 
+        #0a0402 137px, 
+        #060201 140px
+      ),
       linear-gradient(180deg, var(--wood-1), var(--wood-2));
   }
   main { position: relative; z-index: 2; max-width: 900px; margin: 0 auto; }
@@ -155,6 +164,17 @@
 
   label { display: block; font-size: 15px; margin-bottom: 4px; }
   .field { margin-bottom: 18px; }
+  
+  .rule-notice {
+    font-size: 13px;
+    background: rgba(97, 19, 13, 0.12);
+    border-left: 3px solid var(--blood);
+    padding: 8px 10px;
+    margin-bottom: 18px;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+
   input[type="text"], input[type="number"] {
     width: 100%;
     font: inherit;
@@ -250,7 +270,8 @@
   .photo img { width: 100%; height: 100%; display: block; object-fit: cover; filter: sepia(.85) contrast(1.15) brightness(.8); transition: filter .6s var(--ease); }
   li.poster:hover .photo img { filter: sepia(.4) contrast(1.2) brightness(.95); }
   .photo::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 25px rgba(0,0,0,.75); pointer-events: none; }
-  .poster .name { font-family: var(--head); font-size: 22px; word-break: break-all; margin-bottom: 8px; }
+  .poster .name { font-family: var(--head); font-size: 22px; word-break: break-all; margin-bottom: 4px; }
+  .poster .issuer-tag { font-size: 12px; color: var(--paper-dark); font-style: italic; margin-bottom: 8px; word-break: break-all; }
   .poster .label { font-size: 13px; margin: 0; }
   .poster .reward { display: flex; justify-content: center; align-items: center; gap: 8px; font-family: var(--head); font-size: 30px; color: var(--blood); }
   .poster .stacks { font-size: 13px; min-height: 1.2em; margin-bottom: 12px; }
@@ -298,11 +319,23 @@
   <section class="paper form" id="form" aria-labelledby="new-title">
     <h2 id="new-title">Neues Kopfgeld</h2>
     <p class="sub">Trage den Gesuchten ein und lege die Belohnung fest.</p>
+    
+    <div class="rule-notice">
+      📜 <strong>Wichtiger Hinweis:</strong> Wer hier ein Kopfgeld aussetzt, verpflichtet sich dazu, die angegebene Anzahl an Diamanten persönlich an den erfolgreichen Kopfgeldjäger auszuzahlen, sobald der Bandit erledigt wurde!
+    </div>
+
+    <div class="field">
+      <label for="issuer">Dein Minecraft-Name (Auftraggeber)</label>
+      <input type="text" id="issuer" maxlength="16" autocomplete="off" spellcheck="false" placeholder="z. B. Sheriff_Dan">
+      <div class="hint" id="issuerHint">Wer setzt das Kopfgeld aus? (3 bis 16 Zeichen)</div>
+    </div>
+
     <div class="field">
       <label for="player">Minecraft-Name des Gesuchten</label>
       <input type="text" id="player" maxlength="16" autocomplete="off" spellcheck="false" placeholder="z. B. Billy_the_Kid">
       <div class="hint" id="nameHint">3 bis 16 Zeichen: Buchstaben, Zahlen, Unterstrich.</div>
     </div>
+    
     <div class="field">
       <label for="amount">Belohnung in Diamanten</label>
       <div class="amount-wrap">
@@ -352,8 +385,10 @@
   var EASE = "cubic-bezier(.22, 1, .36, 1)";
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  var issuerEl = document.getElementById("issuer");
   var nameEl = document.getElementById("player");
   var amountEl = document.getElementById("amount");
+  var issuerHint = document.getElementById("issuerHint");
   var nameHint = document.getElementById("nameHint");
   var amountHint = document.getElementById("amountHint");
   var listEl = document.getElementById("list");
@@ -432,7 +467,7 @@
     var photo = el("div", "photo");
     var img = document.createElement("img");
     img.alt = "Kopf von " + b.name;
-    // Verwende hochauflösende 3D-Bust-Render (Crafthead) statt blockiger Pixel-Helme
+    // 3D-Bust-Render (Crafthead) mit Fallback auf Minotar Helm
     img.src = "https://crafthead.net/bust/" + encodeURIComponent(b.name) + "/128.png";
     img.onerror = function () {
       if (!img.src.includes("minotar")) {
@@ -445,6 +480,7 @@
     li.appendChild(photo);
 
     li.appendChild(el("div", "name", b.name));
+    li.appendChild(el("div", "issuer-tag", "Ausgesetzt von: " + (b.issuer || "Unbekannt")));
     li.appendChild(el("p", "label", "Belohnung"));
 
     var reward = el("div", "reward");
@@ -466,9 +502,9 @@
     var st = el("div", "stacks", "");
     li.appendChild(st);
 
-    var btn = el("button", "", "Eingelöst");
+    var btn = el("button", "", "Einlösen");
     btn.type = "button";
-    btn.setAttribute("aria-label", "Kopfgeld auf " + b.name + " als eingelöst entfernen");
+    btn.setAttribute("aria-label", "Kopfgeld auf " + b.name + " einlösen und entfernen");
     btn.addEventListener("click", function () { removeBounty(b.name, btn); });
     li.appendChild(btn);
 
@@ -581,9 +617,20 @@
   }
 
   function submit() {
+    var issuer = issuerEl.value.trim();
     var name = nameEl.value.trim();
     var n = parseInt(amountEl.value, 10);
     var ok = true;
+
+    issuerHint.className = "hint";
+    if (!NAME_RE.test(issuer)) {
+      issuerHint.className = "hint error";
+      issuerHint.textContent = "Ungültiger Name. Erlaubt sind 3 bis 16 Zeichen: Buchstaben, Zahlen, Unterstrich.";
+      wiggle(issuerEl);
+      ok = false;
+    } else {
+      issuerHint.textContent = "Wer setzt das Kopfgeld aus? (3 bis 16 Zeichen)";
+    }
 
     nameHint.className = "hint";
     if (!NAME_RE.test(name)) {
@@ -594,6 +641,7 @@
     } else {
       nameHint.textContent = "3 bis 16 Zeichen: Buchstaben, Zahlen, Unterstrich.";
     }
+
     if (isNaN(n) || n < 1 || n > MAX) {
       amountHint.className = "hint error";
       amountHint.textContent = "Gib eine Zahl zwischen 1 und " + MAX + " ein.";
@@ -605,15 +653,16 @@
     var existing = bounties.filter(function (b) { return b.name.toLowerCase() === name.toLowerCase(); })[0];
     if (existing) {
       existing.diamonds = Math.min(MAX * 10, existing.diamonds + n);
+      if (issuer) existing.issuer = issuer; // Aktualisiere den neuesten Aussetzer falls gewünscht
     } else {
-      bounties.push({ name: name, diamonds: n });
+      bounties.push({ name: name, diamonds: n, issuer: issuer });
     }
     save();
     render(false);
 
     if (!reduce) {
       formEl.animate([{ translate: "0 0" }, { translate: "0 5px" }, { translate: "0 0" }], { duration: 320, easing: EASE });
-      submitBtn.animate([{ scale: 1 }, { scale: .96 }, { scale: 1 }], { duration: 320, easing: EASE });
+      submitBtn.animate([{ scale: 1 }, { scale: .96 }, { scale: 1 }], { duration: 320, easing: EASS });
     }
     nameEl.value = "";
     nameHint.textContent = "Kopfgeld auf " + name + " ausgesetzt.";
@@ -630,6 +679,7 @@
   amountEl.addEventListener("input", updateAmountHint);
   submitBtn.addEventListener("click", submit);
   nameEl.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
+  issuerEl.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
 
   /* ---------- Laternenlicht folgt dem Zeiger ---------- */
   var light = document.getElementById("light");
