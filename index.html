@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Guild Hall Bounty Board — Minecraft</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;700;800&family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -317,7 +319,7 @@
   </main>
 
   <p class="mt-8 text-center text-xs text-amber-200/40 relative z-10">
-    All bounties paid in Minecraft diamonds · Shared Guild Board
+    All bounties paid in Minecraft diamonds · Shared Guild Board (Firebase)
   </p>
 
   <!-- Modal -->
@@ -339,73 +341,45 @@
   <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-xs"></div>
 
   <script>
-    // ====================== SHARED STORAGE (JSONBin) ======================
-    const BIN_ID = '6af791a2ffd5d16053bfb694';
-    const MASTER_KEY = '$2a$10$mwzzCcWMeMMHU/VOFNXm8.KQHLFvB6tNqMVvBVGwjedqx8P.BITfm';
-    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    // ====================== FIREBASE ======================
+    const firebaseConfig = {
+      apiKey: "AIzaSyCuIfJ9ON8opfjcSzGG_Dg9sNFbLFK4nNU",
+      authDomain: "mcbounty.firebaseapp.com",
+      databaseURL: "https://mcbounty-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "mcbounty",
+      storageBucket: "mcbounty.firebasestorage.app",
+      messagingSenderId: "414418458359",
+      appId: "1:414418458359:web:320059666010becbca25f2",
+      measurementId: "G-NMJCQWL5XB"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const bountiesRef = db.ref('bounties');
 
     let bounties = [];
     let newlyAddedId = null;
     let pendingModalId = null;
-    let isSyncing = false;
 
     const FALLBACK_AVATAR = 'https://mc-heads.net/avatar/Steve/64';
 
-    // ---------- Shared load / save ----------
-    async function loadBounties() {
-      try {
-        setSyncStatus('Syncing...');
-        const res = await fetch(`${API_URL}/latest`, {
-          headers: { 'X-Master-Key': MASTER_KEY }
-        });
-        if (!res.ok) throw new Error('Failed to load');
-        const data = await res.json();
-        bounties = data.record?.bounties || data.record || [];
-        if (!Array.isArray(bounties)) bounties = [];
-        setSyncStatus('Live');
-        renderBoard(false);
-      } catch (err) {
-        console.error(err);
-        setSyncStatus('Offline');
-        showToast('Could not reach Guild Hall. Retrying...', 'warning');
-      }
-    }
+    // Live listener – everyone sees changes instantly
+    bountiesRef.on('value', (snapshot) => {
+      const data = snapshot.val() || {};
+      bounties = Object.keys(data).map(key => ({
+        id: key,
+        ...data[key]
+      })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-    async function saveBounties() {
-      if (isSyncing) return;
-      isSyncing = true;
-      setSyncStatus('Saving...');
-      try {
-        const res = await fetch(API_URL, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Master-Key': MASTER_KEY
-          },
-          body: JSON.stringify({ bounties })
-        });
-        if (!res.ok) throw new Error('Save failed');
-        setSyncStatus('Live');
-      } catch (err) {
-        console.error(err);
-        setSyncStatus('Error');
-        showToast('Failed to save bounty. Try again.', 'warning');
-      } finally {
-        isSyncing = false;
-      }
-    }
+      document.getElementById('syncStatus').textContent = 'Live';
+      renderBoard(false);
+    }, (error) => {
+      console.error(error);
+      document.getElementById('syncStatus').textContent = 'Error';
+      showToast('Connection to Guild Hall failed', 'warning');
+    });
 
-    function setSyncStatus(text) {
-      const el = document.getElementById('syncStatus');
-      if (el) el.textContent = text;
-    }
-
-    // Auto-refresh every 18 seconds
-    setInterval(() => {
-      if (!isSyncing) loadBounties();
-    }, 18000);
-
-    // ---------- Rest of the original logic (adapted) ----------
+    // ---------- Rest of the logic ----------
     function formatStacks(amount) {
       if (amount < 64) return '';
       const stacks = Math.floor(amount / 64);
@@ -423,13 +397,6 @@
 
     function renderBoard(useFlip = false) {
       const list = document.getElementById('bountyList');
-      const firstRects = new Map();
-
-      if (useFlip) {
-        list.querySelectorAll('[data-bounty-id]').forEach(el => {
-          firstRects.set(el.dataset.bountyId, el.getBoundingClientRect());
-        });
-      }
 
       // Stats
       document.getElementById('statCount').textContent = bounties.length;
@@ -501,7 +468,7 @@
                       <polygon points="12 11 21 9 12 22" fill="#0e7490"/>
                     </svg>
                     <span class="font-mono-num text-sm sm:text-base font-bold text-[#f7e39c] truncate">
-                      ${b.amount.toLocaleString()} <span class="text-xs font-semibold text-cyan-300">Diamonds</span>
+                      ${Number(b.amount).toLocaleString()} <span class="text-xs font-semibold text-cyan-300">Diamonds</span>
                     </span>
                   </div>
                   ${stackStr ? `<span class="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono-num font-bold bg-cyan-400/15 text-cyan-200 border border-cyan-400/25">${stackStr}</span>` : ''}
@@ -564,7 +531,7 @@
       amountInputEl.focus();
     }
 
-    async function handleFormSubmit(e) {
+    function handleFormSubmit(e) {
       e.preventDefault();
       const name = nameInputEl.value.trim();
       const amount = parseInt(amountInputEl.value, 10);
@@ -573,15 +540,16 @@
       if (!name) { showToast('Enter a target player name!', 'warning'); nameInputEl.focus(); return; }
       if (!amount || amount < 1) { showToast('Bounty must be at least 1 diamond!', 'warning'); amountInputEl.focus(); return; }
 
+      const newRef = bountiesRef.push();
       const newEntry = {
-        id: `bounty_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-        name, amount, reason, createdAt: Date.now()
+        name,
+        amount,
+        reason,
+        createdAt: Date.now()
       };
 
-      newlyAddedId = newEntry.id;
-      bounties.unshift(newEntry);
-      renderBoard(true);
-      await saveBounties();
+      newlyAddedId = newRef.key;
+      newRef.set(newEntry);
 
       nameInputEl.value = '';
       amountInputEl.value = '';
@@ -598,7 +566,7 @@
       pendingModalId = id;
       document.getElementById('modalAvatar').src = `https://mc-heads.net/avatar/${encodeURIComponent(bounty.name)}/64`;
       document.getElementById('modalTargetName').textContent = bounty.name;
-      document.getElementById('modalRewardText').textContent = `${bounty.amount.toLocaleString()} Diamonds Reward`;
+      document.getElementById('modalRewardText').textContent = `${Number(bounty.amount).toLocaleString()} Diamonds Reward`;
       document.getElementById('confirmClaimBtn').onclick = () => resolveBounty(id, true);
       document.getElementById('confirmRemoveBtn').onclick = () => resolveBounty(id, false);
 
@@ -629,7 +597,7 @@
     document.getElementById('actionModal').addEventListener('click', e => { if (e.target.id === 'actionModal') closeModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && pendingModalId) closeModal(); });
 
-    async function resolveBounty(id, isClaimed) {
+    function resolveBounty(id, isClaimed) {
       const index = bounties.findIndex(b => b.id === id);
       if (index === -1) { closeModal(); return; }
 
@@ -641,23 +609,19 @@
         const rect = cardEl.getBoundingClientRect();
         if (isClaimed) spawnDiamondBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
         cardEl.classList.add('animate-poster-tear');
-        setTimeout(async () => {
-          bounties.splice(index, 1);
-          renderBoard(true);
-          await saveBounties();
+        setTimeout(() => {
+          bountiesRef.child(id).remove();
           showToast(isClaimed 
-            ? `Bounty claimed! Collected ${targetBounty.amount.toLocaleString()} ♦ for ${targetBounty.name}.` 
+            ? `Bounty claimed! Collected ${Number(targetBounty.amount).toLocaleString()} ♦ for ${targetBounty.name}.` 
             : `Tore down bounty notice for ${targetBounty.name}.`, 
             isClaimed ? 'diamond' : 'neutral');
         }, 360);
       } else {
-        bounties.splice(index, 1);
-        renderBoard(true);
-        await saveBounties();
+        bountiesRef.child(id).remove();
       }
     }
 
-    async function loadSampleBounties() {
+    function loadSampleBounties() {
       const samples = [
         { name: 'Herobrine', amount: 576, reason: 'Haunting strip mines & removing leaves' },
         { name: 'Technoblade', amount: 256, reason: 'Unstoppable PvP dominance' },
@@ -666,12 +630,15 @@
         { name: 'Creeper', amount: 16, reason: 'Destroying the wheat farm again' }
       ];
       const now = Date.now();
-      bounties = samples.map((s, idx) => ({
-        id: `sample_${now}_${idx}`,
-        name: s.name, amount: s.amount, reason: s.reason, createdAt: now - idx * 5000
-      }));
-      renderBoard(false);
-      await saveBounties();
+      samples.forEach((s, idx) => {
+        const ref = bountiesRef.push();
+        ref.set({
+          name: s.name,
+          amount: s.amount,
+          reason: s.reason,
+          createdAt: now - idx * 5000
+        });
+      });
       showToast('Pinned 5 notorious Guild bounties!', 'success');
     }
 
@@ -701,7 +668,7 @@
       return div.innerHTML;
     }
 
-    // Particle engines (same as before)
+    // Particle engines
     const ambientCanvas = document.getElementById('ambientCanvas');
     const aCtx = ambientCanvas.getContext('2d');
     const burstCanvas = document.getElementById('burstCanvas');
@@ -768,7 +735,6 @@
       resizeCanvases();
       initEmbers();
       animateCanvases();
-      loadBounties(); // initial load from shared storage
     };
   </script>
 </body>
