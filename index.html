@@ -1,32 +1,31 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Guild Hall Bounty Board — Minecraft</title>
+  <title>Sheriff's Bounty Board — Wild West Minecraft</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;700;800&family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@400;500;600;700&family=Press+Start+2P&family=Rye&family=VT323&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --oak-darkest: #140c07;
-      --oak-dark: #23150c;
-      --oak-mid: #3a2314;
-      --oak-light: #52331e;
-      --brass: #d4a84f;
-      --brass-dark: #8c6623;
-      --parchment-light: #fcf6e8;
-      --parchment-mid: #f3e6cc;
-      --parchment-dark: #e2cfa8;
-      --ink-primary: #26170c;
-      --ink-secondary: #5c4028;
-      --crimson: #8f1d1d;
+      --saloon-darkest: #140b05;
+      --saloon-dark: #241308;
+      --cedar-mid: #4a2a14;
+      --cedar-light: #6b3f1e;
+      --sunset-amber: #e08d3c;
+      --brass-gold: #d9a441;
+      --parchment-light: #f9efd9;
+      --parchment-mid: #eedbb8;
+      --parchment-burnt: #d8bc8c;
+      --ink-sepia: #261408;
+      --ink-faded: #5c3b20;
+      --stamp-crimson: #941b16;
       --diamond-cyan: #4deeea;
-      --diamond-deep: #18a4b8;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -34,166 +33,203 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      background-color: var(--oak-darkest);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--saloon-darkest);
       background-image:
-        radial-gradient(ellipse 80% 50% at 50% -5%, rgba(255, 166, 64, 0.18) 0%, rgba(180, 90, 20, 0.06) 45%, transparent 75%),
-        radial-gradient(circle at 15% 85%, rgba(77, 238, 234, 0.04) 0%, transparent 45%),
-        linear-gradient(180deg, #1b1009 0%, #100905 100%);
-      color: #f4e8d1;
+        radial-gradient(ellipse 90% 55% at 50% -8%, rgba(235, 138, 46, 0.26) 0%, rgba(168, 76, 18, 0.1) 48%, transparent 78%),
+        radial-gradient(circle at 12% 18%, rgba(255, 183, 77, 0.08) 0%, transparent 35%),
+        radial-gradient(circle at 88% 18%, rgba(255, 183, 77, 0.08) 0%, transparent 35%),
+        linear-gradient(180deg, #211107 0%, #160b04 55%, #0e0703 100%);
+      color: #f5e6cc;
       overflow-x: hidden;
     }
 
     #ambientCanvas, #burstCanvas {
-      position: fixed; inset: 0; width: 100%; height: 100%;
-      pointer-events: none;
+      position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none;
     }
     #ambientCanvas { z-index: 0; }
     #burstCanvas { z-index: 60; }
 
-    .font-display { font-family: 'Cinzel Decorative', 'Cinzel', serif; }
-    .font-serif-title { font-family: 'Cinzel', serif; }
-    .font-mono-num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .font-western { font-family: 'Rye', serif; }
+    .font-typewriter { font-family: 'Courier Prime', monospace; font-variant-numeric: tabular-nums; }
+    .font-pixel { font-family: 'Press Start 2P', monospace; font-variant-numeric: tabular-nums; }
 
-    .guild-board {
+    .sheriff-board {
       position: relative;
+      border-radius: 4px;
       background:
-        repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0px, rgba(0,0,0,0.14) 2px, transparent 2px, transparent 64px),
-        linear-gradient(165deg, #3b2415 0%, #2a180d 50%, #211209 100%);
-      border: 3px solid #593822;
-      box-shadow: 0 30px 70px -15px rgba(0,0,0,0.85), 0 0 0 1px #140b06, inset 0 2px 1px rgba(255,214,153,0.14), inset 0 0 60px rgba(0,0,0,0.65);
+        repeating-linear-gradient(90deg, rgba(15,7,2,0.24) 0px, rgba(15,7,2,0.24) 3px, transparent 3px, transparent 72px),
+        repeating-linear-gradient(0deg, rgba(255,195,130,0.025) 0px, rgba(255,195,130,0.025) 1px, transparent 1px, transparent 14px),
+        linear-gradient(170deg, #543118 0%, #3d2210 48%, #2b170a 100%);
+      border-top: 4px solid #8a562e;
+      border-left: 4px solid #7c4b26;
+      border-right: 4px solid #381e0c;
+      border-bottom: 4px solid #2b1608;
+      box-shadow: 0 35px 80px -15px rgba(0,0,0,0.9), 0 0 0 3px #140a03, inset 3px 3px 0 rgba(255,214,153,0.24), inset -3px -3px 0 rgba(16,8,3,0.72), inset 0 0 75px rgba(0,0,0,0.72);
     }
 
-    .board-inner-well {
-      background:
-        radial-gradient(circle at 50% 0%, rgba(255,190,110,0.06), transparent 70%),
-        repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 2px, transparent 2px, transparent 48px),
-        linear-gradient(180deg, #1d110a 0%, #170d07 100%);
-      box-shadow: inset 0 6px 18px rgba(0,0,0,0.75), inset 0 -2px 4px rgba(255,220,175,0.06), 0 1px 0 rgba(255,215,160,0.08);
-      border: 1px solid #120904;
+    .rope-trim {
+      border: 2px dashed rgba(217,168,92,0.34);
+      border-radius: 3px;
+      box-shadow: inset 0 0 24px rgba(0,0,0,0.45);
     }
 
-    .iron-bracket {
-      position: absolute; width: 26px; height: 26px;
-      background: linear-gradient(135deg, #4b4e54 0%, #26282c 60%, #18191c 100%);
-      border: 1px solid #63676e;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.25);
-      z-index: 10; pointer-events: none;
-    }
-    .iron-bracket::after {
-      content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #9ca3af, #374151);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.8); top: 50%; left: 50%; transform: translate(-50%,-50%);
-    }
-    .bracket-tl { top: -4px; left: -4px; border-radius: 8px 2px 6px 2px; }
-    .bracket-tr { top: -4px; right: -4px; border-radius: 2px 8px 2px 6px; }
-    .bracket-bl { bottom: -4px; left: -4px; border-radius: 2px 6px 2px 8px; }
-    .bracket-br { bottom: -4px; right: -4px; border-radius: 6px 2px 8px 2px; }
-
-    .parchment-sheet {
+    .board-plank-well {
+      border-radius: 3px;
       background:
-        radial-gradient(circle at 85% 15%, rgba(212,168,79,0.14), transparent 45%),
-        radial-gradient(circle at 12% 90%, rgba(160,114,56,0.14), transparent 50%),
-        linear-gradient(165deg, var(--parchment-light) 0%, var(--parchment-mid) 58%, var(--parchment-dark) 100%);
-      color: var(--ink-primary);
-      border: 1px solid #cbb389;
-      box-shadow: 0 12px 28px -6px rgba(0,0,0,0.55), 0 4px 10px -2px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.85), inset 0 0 24px rgba(168,128,72,0.18);
+        radial-gradient(ellipse at 50% 0%, rgba(235,152,68,0.08), transparent 72%),
+        repeating-linear-gradient(0deg, rgba(10,5,2,0.34) 0px, rgba(10,5,2,0.34) 3px, transparent 3px, transparent 54px),
+        linear-gradient(180deg, #241308 0%, #190d05 100%);
+      box-shadow: inset 0 8px 24px rgba(0,0,0,0.85), inset -2px -2px 0 rgba(255,205,145,0.1), inset 2px 2px 0 rgba(0,0,0,0.65);
+      border: 2px solid #140a04;
+    }
+
+    .iron-plate {
+      position: absolute; width: 30px; height: 30px; border-radius: 2px;
+      background: linear-gradient(135deg, #52555c 0%, #27292e 60%, #141518 100%);
+      border-top: 2px solid #868c96; border-left: 2px solid #767c85;
+      border-right: 2px solid #1e2024; border-bottom: 2px solid #141518;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.78); z-index: 12; pointer-events: none;
+    }
+    .iron-plate::after {
+      content: ''; position: absolute; width: 8px; height: 8px; border-radius: 1px;
+      background: linear-gradient(135deg, #cbd5e1, #475569);
+      border-top: 1px solid #f1f5f9; border-left: 1px solid #e2e8f0;
+      border-right: 1px solid #1e293b; border-bottom: 1px solid #0f172a;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.9); top: 50%; left: 50%; transform: translate(-50%,-50%);
+    }
+    .plate-tl { top: -5px; left: -5px; }
+    .plate-tr { top: -5px; right: -5px; }
+    .plate-bl { bottom: -5px; left: -5px; }
+    .plate-br { bottom: -5px; right: -5px; }
+
+    .western-parchment {
+      border-radius: 3px;
+      background:
+        radial-gradient(circle at 88% 12%, rgba(166,108,44,0.22), transparent 36%),
+        radial-gradient(circle at 10% 88%, rgba(138,84,30,0.24), transparent 42%),
+        radial-gradient(ellipse at 50% 50%, var(--parchment-light) 45%, var(--parchment-mid) 82%, var(--parchment-burnt) 100%);
+      color: var(--ink-sepia);
+      border-top: 2px solid #d4b17a; border-left: 2px solid #c7a269;
+      border-right: 2px solid #8c6938; border-bottom: 2px solid #78582b;
+      box-shadow: 0 14px 32px -6px rgba(0,0,0,0.72), 0 4px 10px -2px rgba(0,0,0,0.45), inset 0 0 32px rgba(133,84,32,0.26), inset 2px 2px 0 rgba(255,252,240,0.75);
     }
 
     .bounty-card { position: relative; transform-style: preserve-3d; will-change: transform, opacity; transition: box-shadow 0.28s cubic-bezier(0.22,1,0.36,1); cursor: default; }
     .bounty-card-inner {
       position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between;
-      border-radius: 10px; padding: 22px 18px 16px;
-      background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.65), transparent 60%), linear-gradient(168deg, #fdf8ee 0%, #f4e7ce 55%, #e5d2ae 100%);
-      border: 1px solid #c9b084;
-      box-shadow: 0 10px 22px -6px rgba(0,0,0,0.6), 0 2px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 0 20px rgba(158,118,64,0.16);
+      border-radius: 2px; padding: 22px 16px 15px;
+      background:
+        radial-gradient(circle at 85% 15%, rgba(145,92,38,0.18), transparent 38%),
+        radial-gradient(circle at 14% 85%, rgba(130,78,28,0.22), transparent 44%),
+        radial-gradient(ellipse at 50% 45%, #fbf2de 42%, #efe0be 80%, #dcc192 100%);
+      border-top: 2px solid #d6b47e; border-left: 2px solid #c9a46b;
+      border-right: 2px solid #8f6b38; border-bottom: 2px solid #7a5829;
+      box-shadow: 0 12px 24px -6px rgba(0,0,0,0.75), 0 3px 7px rgba(0,0,0,0.45), inset 0 0 28px rgba(135,86,34,0.25), inset 2px 2px 0 rgba(255,253,244,0.85);
       overflow: hidden; transition: border-color 0.25s ease, box-shadow 0.28s ease;
     }
+    .bounty-card-inner::before, .bounty-card-inner::after {
+      content: ''; position: absolute; width: 6px; height: 6px; background: #241308; z-index: 5; pointer-events: none;
+    }
+    .bounty-card-inner::before { top: -2px; right: -2px; box-shadow: -4px 4px 0 #7a5829; }
+    .bounty-card-inner::after { bottom: -2px; left: -2px; box-shadow: 4px -4px 0 #8f6b38; }
     .bounty-card:hover .bounty-card-inner {
-      border-color: #b5893e;
-      box-shadow: 0 22px 38px -10px rgba(0,0,0,0.78), 0 0 22px rgba(212,168,79,0.18), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 0 22px rgba(158,118,64,0.2);
+      border-top-color: #f0c265; border-left-color: #e0b053;
+      box-shadow: 0 24px 42px -10px rgba(0,0,0,0.85), 0 0 26px rgba(224,141,60,0.24), inset 0 0 28px rgba(135,86,34,0.28), inset 2px 2px 0 rgba(255,255,255,0.92);
     }
 
     .card-sheen {
-      position: absolute; inset: 0; pointer-events: none; border-radius: 10px; opacity: 0; transition: opacity 0.25s ease;
-      background: radial-gradient(circle 180px at var(--mx,50%) var(--my,30%), rgba(255,252,240,0.48), transparent 75%);
+      position: absolute; inset: 0; pointer-events: none; border-radius: 2px; opacity: 0; transition: opacity 0.25s ease;
+      background: radial-gradient(circle 190px at var(--mx,50%) var(--my,30%), rgba(255,248,225,0.5), transparent 75%);
       z-index: 4;
     }
     .bounty-card:hover .card-sheen { opacity: 1; }
 
-    .paper-lines { background-image: repeating-linear-gradient(transparent, transparent 21px, rgba(139,98,52,0.08) 22px); }
-
-    .brass-tack {
-      position: absolute; top: -9px; left: 50%; transform: translateX(-50%); width: 20px; height: 20px; border-radius: 50%;
-      background: radial-gradient(circle at 35% 30%, #fff0b8 0%, #e0b252 45%, #8a5e18 90%, #4d3208 100%);
-      box-shadow: 0 4px 6px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.8);
-      z-index: 15; pointer-events: none;
+    .iron-nail {
+      position: absolute; top: -9px; left: 50%; transform: translateX(-50%); width: 18px; height: 18px; border-radius: 2px;
+      background: linear-gradient(135deg, #94a3b8 0%, #475569 48%, #1e293b 88%, #090d16 100%);
+      border-top: 2px solid #cbd5e1; border-left: 2px solid #94a3b8;
+      border-right: 2px solid #1e293b; border-bottom: 2px solid #090d16;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.75), 0 1px 2px rgba(0,0,0,0.9); z-index: 16; pointer-events: none;
     }
-    .brass-tack::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; border: 1px solid rgba(92,60,12,0.35); }
+    .iron-nail::after { content: ''; position: absolute; inset: 3px; border-radius: 1px; border: 1px solid rgba(15,23,42,0.45); }
 
-    @keyframes posterSlap {
-      0% { opacity: 0; transform: scale(1.22) translateY(-28px) rotate(-4deg); filter: brightness(1.15); }
-      55% { opacity: 1; transform: scale(0.97) translateY(3px) rotate(1.2deg); filter: brightness(1); }
-      78% { transform: scale(1.015) translateY(-1px) rotate(-0.5deg); }
+    .captured-stamp {
+      position: absolute; top: 44%; left: 50%; transform: translate(-50%,-50%) rotate(-14deg) scale(1.6);
+      opacity: 0; font-family: 'Rye', serif; font-size: 1.45rem; letter-spacing: 0.14em; color: #991b1b;
+      border: 4px double #991b1b; padding: 4px 12px; border-radius: 2px; background: rgba(250,240,218,0.9);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35); pointer-events: none; z-index: 25; white-space: nowrap;
+      transition: transform 0.22s cubic-bezier(0.22,1,0.36,1), opacity 0.18s ease;
+    }
+    .bounty-card.is-captured .captured-stamp { opacity: 1; transform: translate(-50%,-50%) rotate(-14deg) scale(1); }
+
+    @keyframes posterNailSlap {
+      0% { opacity: 0; transform: scale(1.25) translateY(-32px) rotate(-5deg); filter: brightness(1.2); }
+      50% { opacity: 1; transform: scale(0.96) translateY(4px) rotate(1.4deg); filter: brightness(1); }
+      76% { transform: scale(1.02) translateY(-1px) rotate(-0.6deg); }
       100% { opacity: 1; transform: scale(1) translateY(0) rotate(var(--base-rot, 0deg)); }
     }
-    .animate-poster-slap { animation: posterSlap 0.58s cubic-bezier(0.22,1,0.36,1) forwards; }
+    .animate-poster-slap { animation: posterNailSlap 0.56s cubic-bezier(0.22,1,0.36,1) forwards; }
 
-    @keyframes posterTear {
+    @keyframes boardHammerThud {
+      0%,100% { transform: translateY(0); } 25% { transform: translateY(3px); } 60% { transform: translateY(-1.5px); }
+    }
+    .animate-board-thud { animation: boardHammerThud 0.32s cubic-bezier(0.22,1,0.36,1); }
+
+    @keyframes posterTearOff {
       0% { opacity: 1; transform: scale(1) rotate(var(--base-rot, 0deg)); }
-      30% { opacity: 1; transform: scale(1.04) translateY(-6px) rotate(-2deg); }
-      100% { opacity: 0; transform: scale(0.82) translateY(36px) rotate(9deg); filter: blur(2px); }
+      35% { opacity: 1; transform: scale(1.03) translateY(-4px) rotate(-2deg); }
+      100% { opacity: 0; transform: scale(0.82) translateY(42px) rotate(11deg); filter: blur(2px); }
     }
-    .animate-poster-tear { animation: posterTear 0.42s cubic-bezier(0.4,0,0.2,1) forwards; pointer-events: none; }
+    .animate-poster-tear { animation: posterTearOff 0.45s cubic-bezier(0.4,0,0.2,1) forwards; pointer-events: none; }
 
-    .mc-diamond-badge {
-      position: relative; overflow: hidden;
-      background: linear-gradient(135deg, #1b120b 0%, #2b1c11 100%);
-      border: 1px solid rgba(77,238,234,0.32);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 3px 8px rgba(0,0,0,0.35);
+    .mc-diamond-plaque {
+      position: relative; overflow: hidden; background: #1e1a17;
+      border-top: 2.5px solid #0e0c0a; border-left: 2.5px solid #0e0c0a;
+      border-right: 2.5px solid #594e43; border-bottom: 2.5px solid #594e43;
+      box-shadow: inset 2px 2px 0 #120f0d, inset -2px -2px 0 #383029, 0 3px 8px rgba(0,0,0,0.45);
     }
-    .mc-diamond-badge::after {
-      content: ''; position: absolute; top: 0; left: -120%; width: 70%; height: 100%;
+    .mc-diamond-plaque::after {
+      content: ''; position: absolute; top: 0; left: -120%; width: 65%; height: 100%;
       background: linear-gradient(90deg, transparent, rgba(126,249,245,0.22), transparent);
-      transform: skewX(-22deg); animation: diamondSweep 4.5s ease-in-out infinite;
+      transform: skewX(-22deg); animation: diamondSweep 4.6s ease-in-out infinite;
     }
-    @keyframes diamondSweep { 0%,65% { left: -120%; } 100% { left: 160%; } }
+    @keyframes diamondSweep { 0%,66% { left: -120%; } 100% { left: 160%; } }
 
-    .mc-avatar-frame {
-      image-rendering: pixelated; background: #2c1d11; border: 2px solid #8c6a3e;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,240,200,0.35);
+    .western-portrait-frame {
+      image-rendering: pixelated; border-radius: 2px; background: #2b180c;
+      border-top: 2.5px solid #8c5a30; border-left: 2.5px solid #7a4d27;
+      border-right: 2.5px solid #3b220e; border-bottom: 2.5px solid #2b180a;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.48), inset 0 0 0 1px rgba(255,232,185,0.35);
     }
 
-    .btn-emerald {
-      background: linear-gradient(180deg, #569e34 0%, #3d7a22 55%, #2f6119 100%);
-      border: 1px solid #76c44e; color: #f4fce8; text-shadow: 0 1px 2px rgba(0,0,0,0.55);
-      box-shadow: 0 4px 0 #1e400f, 0 8px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.32);
+    .btn-brass-nail {
+      border-radius: 3px;
+      background: linear-gradient(180deg, #e0a943 0%, #b87e24 52%, #8f5d14 100%);
+      border-top: 2px solid #fce09b; border-left: 2px solid #f5cf76;
+      border-right: 2px solid #6e450a; border-bottom: 2px solid #573507;
+      color: #211004; text-shadow: 0 1px 0 rgba(255,240,195,0.55);
+      box-shadow: 0 4px 0 #422704, 0 10px 20px rgba(0,0,0,0.45), inset 1px 1px 0 rgba(255,250,225,0.65);
       transition: transform 0.14s cubic-bezier(0.22,1,0.36,1), box-shadow 0.14s ease, filter 0.15s ease;
     }
-    .btn-emerald:hover { filter: brightness(1.07); transform: translateY(-1px); box-shadow: 0 5px 0 #1e400f, 0 12px 22px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.4); }
-    .btn-emerald:active { transform: translateY(2px); box-shadow: 0 2px 0 #1e400f, 0 4px 10px rgba(0,0,0,0.35); }
+    .btn-brass-nail:hover { filter: brightness(1.07); transform: translateY(-1px); box-shadow: 0 5px 0 #422704, 0 13px 24px rgba(0,0,0,0.52), inset 1px 1px 0 rgba(255,252,235,0.75); }
+    .btn-brass-nail:active { transform: translateY(2px); box-shadow: 0 2px 0 #422704, 0 4px 10px rgba(0,0,0,0.4); }
 
-    ::-webkit-scrollbar { width: 9px; height: 9px; }
-    ::-webkit-scrollbar-track { background: #140c07; }
-    ::-webkit-scrollbar-thumb { background: #4a2e1b; border-radius: 999px; border: 2px solid #140c07; }
-    ::-webkit-scrollbar-thumb:hover { background: #6b4328; }
-
-    .parchment-input {
-      background: rgba(255,253,247,0.92); border: 1.5px solid #bfa477; color: #241509;
-      transition: all 0.2s cubic-bezier(0.22,1,0.36,1); box-shadow: inset 0 2px 4px rgba(82,54,24,0.08);
+    .western-input {
+      border-radius: 3px; background: rgba(255,251,240,0.94);
+      border-top: 2px solid #7d5d32; border-left: 2px solid #8f6c3d;
+      border-right: 2px solid #d4b88c; border-bottom: 2px solid #dec49b;
+      color: #241206; transition: all 0.2s cubic-bezier(0.22,1,0.36,1);
+      box-shadow: inset 2px 2px 0 rgba(72,42,16,0.1);
     }
-    .parchment-input:focus {
-      outline: none; background: #ffffff; border-color: #8f6329;
-      box-shadow: 0 0 0 3px rgba(212,168,79,0.28), inset 0 1px 2px rgba(82,54,24,0.05);
+    .western-input:focus {
+      outline: none; background: #ffffff;
+      border-top-color: #6b3610; border-left-color: #7d4116;
+      box-shadow: 0 0 0 2px rgba(217,164,65,0.4), inset 2px 2px 0 rgba(72,42,16,0.06);
     }
 
     @keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
     .toast-enter { animation: toastIn 0.32s cubic-bezier(0.22,1,0.36,1) forwards; }
-
-    .loading-overlay {
-      position: absolute; inset: 0; background: rgba(20,12,7,0.7); display: flex; align-items: center; justify-content: center;
-      z-index: 30; border-radius: 12px; backdrop-filter: blur(4px);
-    }
   </style>
 </head>
 <body class="py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
@@ -203,136 +239,110 @@
 
   <!-- Header -->
   <header class="relative z-10 text-center max-w-3xl mx-auto mb-7">
-    <div class="inline-flex items-center gap-2.5 px-3.5 py-1 rounded-full bg-amber-950/70 border border-amber-500/30 text-amber-300/90 text-xs font-semibold tracking-widest uppercase mb-3 shadow-lg backdrop-blur-sm">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/70 border border-amber-600/40 text-amber-300/90 text-xs font-bold tracking-widest uppercase mb-3 shadow-lg">
       <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-      Overworld Hunters' Guild
+      Sheriff's Office • Frontier Territory
     </div>
 
-    <h1 class="font-display text-3xl sm:text-5xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-[#fff3cf] via-[#e8c678] to-[#b58736] drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)] flex items-center justify-center gap-3 sm:gap-4">
-      <svg class="w-7 h-7 sm:w-9 sm:h-9 text-amber-400 shrink-0 drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline>
-        <line x1="13" y1="19" x2="19" y2="13"></line>
-        <line x1="16" y1="16" x2="20" y2="20"></line>
-        <line x1="19" y1="21" x2="21" y2="19"></line>
-      </svg>
-      <span>Bounty Board</span>
-      <svg class="w-7 h-7 sm:w-9 sm:h-9 text-amber-400 shrink-0 drop-shadow scale-x-[-1]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline>
-        <line x1="13" y1="19" x2="19" y2="13"></line>
-        <line x1="16" y1="16" x2="20" y2="20"></line>
-        <line x1="19" y1="21" x2="21" y2="19"></line>
-      </svg>
+    <h1 class="font-western text-3xl sm:text-5xl tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-[#fff3cf] via-[#e8c678] to-[#b58736] drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)]">
+      BOUNTY BOARD
     </h1>
-
-    <p class="mt-2 text-sm sm:text-base text-amber-200/75 font-medium tracking-wide">
-      Wanted — Dead or Alive <span class="text-cyan-300/90 font-semibold">(paid strictly in uncut diamonds)</span>
+    <p class="mt-2 text-sm sm:text-base text-amber-200/75 font-medium tracking-wide font-typewriter">
+      Wanted — Dead or Alive <span class="text-cyan-300/90 font-bold">(paid in uncut diamonds)</span>
     </p>
   </header>
 
   <!-- Main Board -->
-  <main class="guild-board relative z-10 w-full max-w-5xl rounded-2xl p-4 sm:p-7 lg:p-8">
-    <div class="iron-bracket bracket-tl"></div>
-    <div class="iron-bracket bracket-tr"></div>
-    <div class="iron-bracket bracket-bl"></div>
-    <div class="iron-bracket bracket-br"></div>
+  <main id="mainBoard" class="sheriff-board relative z-10 w-full max-w-5xl p-4 sm:p-7 lg:p-8">
+    <div class="iron-plate plate-tl"></div>
+    <div class="iron-plate plate-tr"></div>
+    <div class="iron-plate plate-bl"></div>
+    <div class="iron-plate plate-br"></div>
 
-    <!-- Stats -->
-    <section class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-      <div class="flex items-center justify-between sm:justify-start gap-3.5 px-4 py-3 rounded-xl bg-black/35 border border-amber-500/15 shadow-inner">
-        <div class="w-10 h-10 rounded-lg bg-amber-900/50 border border-amber-500/30 flex items-center justify-center text-amber-300 shrink-0">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+    <div class="rope-trim p-1 mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="flex items-center gap-3 px-4 py-3 rounded bg-black/40 border border-amber-700/30">
+          <div class="text-amber-300 text-xl">📜</div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider text-amber-200/60 font-bold">Active Posters</div>
+            <div id="statCount" class="font-typewriter text-xl font-bold text-amber-100">0</div>
+          </div>
         </div>
-        <div>
-          <div class="text-[11px] uppercase tracking-wider text-amber-200/60 font-semibold">Active Contracts</div>
-          <div id="statCount" class="font-mono-num text-xl font-bold text-amber-100">0</div>
+        <div class="flex items-center gap-3 px-4 py-3 rounded bg-black/40 border border-cyan-600/30">
+          <div class="text-cyan-300 text-xl">💎</div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider text-cyan-200/60 font-bold">Diamond Pool</div>
+            <div id="statPool" class="font-typewriter text-lg font-bold text-cyan-300">0 ♦</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 px-4 py-3 rounded bg-black/40 border border-rose-600/30">
+          <div class="text-rose-300 text-xl">⚡</div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider text-rose-200/60 font-bold">Status</div>
+            <div id="syncStatus" class="text-sm font-bold text-rose-200">Connecting...</div>
+          </div>
         </div>
       </div>
-
-      <div class="flex items-center justify-between sm:justify-start gap-3.5 px-4 py-3 rounded-xl bg-black/35 border border-cyan-400/20 shadow-inner">
-        <div class="w-10 h-10 rounded-lg bg-cyan-950/60 border border-cyan-400/30 flex items-center justify-center shrink-0">
-          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none"><polygon points="12 2 21 9 12 22 3 9" fill="#22d3ee"/><polygon points="12 2 21 9 12 11" fill="#a5f3fc"/><polygon points="12 2 3 9 12 11" fill="#67e8f9"/><polygon points="12 11 21 9 12 22" fill="#0891b2"/></svg>
-        </div>
-        <div class="min-w-0">
-          <div class="text-[11px] uppercase tracking-wider text-cyan-200/65 font-semibold">Total Diamond Pool</div>
-          <div id="statPool" class="font-mono-num text-lg sm:text-xl font-bold text-cyan-300 truncate">0 ♦</div>
-        </div>
-      </div>
-
-      <div class="flex items-center justify-between sm:justify-start gap-3.5 px-4 py-3 rounded-xl bg-black/35 border border-rose-500/20 shadow-inner">
-        <div class="w-10 h-10 rounded-lg bg-rose-950/60 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-        </div>
-        <div>
-          <div class="text-[11px] uppercase tracking-wider text-rose-200/65 font-semibold">Status</div>
-          <div id="syncStatus" class="text-sm font-semibold text-rose-200">Connecting...</div>
-        </div>
-      </div>
-    </section>
+    </div>
 
     <!-- Form -->
-    <div class="parchment-sheet rounded-xl p-5 sm:p-6 mb-7 relative">
-      <div class="brass-tack"></div>
+    <div class="western-parchment p-5 sm:p-6 mb-7 relative">
+      <div class="iron-nail"></div>
       <form id="bountyForm" class="space-y-4" onsubmit="handleFormSubmit(event)">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold text-[#5c4028] uppercase tracking-wider mb-1.5">Target Name</label>
+            <label class="block text-xs font-bold text-[#5c3b20] uppercase tracking-wider mb-1.5 font-typewriter">Outlaw Name</label>
             <div class="flex gap-2">
-              <input type="text" id="name" maxlength="24" placeholder="Steve" class="parchment-input flex-1 rounded-lg px-3 py-2.5 text-sm font-medium" required>
-              <img id="previewHead" src="https://mc-heads.net/avatar/Steve/40" class="mc-avatar-frame w-10 h-10 rounded-lg object-cover shrink-0" alt="">
+              <input type="text" id="name" maxlength="24" placeholder="Steve" class="western-input flex-1 px-3 py-2.5 text-sm font-medium" required>
+              <img id="previewHead" src="https://mc-heads.net/avatar/Steve/40" class="western-portrait-frame w-10 h-10 object-cover shrink-0" alt="">
             </div>
           </div>
           <div>
-            <label class="block text-xs font-bold text-[#5c4028] uppercase tracking-wider mb-1.5">Bounty (Diamonds)</label>
+            <label class="block text-xs font-bold text-[#5c3b20] uppercase tracking-wider mb-1.5 font-typewriter">Bounty (Diamonds)</label>
             <div class="relative">
-              <input type="number" id="amount" min="1" max="999999" placeholder="64" class="parchment-input w-full rounded-lg px-3 py-2.5 text-sm font-medium" required>
-              <span id="stackHelper" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8a6a40] font-mono-num"></span>
+              <input type="number" id="amount" min="1" max="999999" placeholder="64" class="western-input w-full px-3 py-2.5 text-sm font-medium" required>
+              <span id="stackHelper" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8a6a40] font-typewriter"></span>
             </div>
             <div class="flex gap-1.5 mt-2 flex-wrap">
-              <button type="button" onclick="setQuickAmount(16)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-semibold">16</button>
-              <button type="button" onclick="setQuickAmount(64)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-semibold">64</button>
-              <button type="button" onclick="setQuickAmount(128)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-semibold">128</button>
-              <button type="button" onclick="setQuickAmount(256)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-semibold">256</button>
+              <button type="button" onclick="setQuickAmount(16)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-bold">16</button>
+              <button type="button" onclick="setQuickAmount(64)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-bold">64</button>
+              <button type="button" onclick="setQuickAmount(128)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-bold">128</button>
+              <button type="button" onclick="setQuickAmount(256)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-bold">256</button>
             </div>
           </div>
         </div>
         <div>
-          <label class="block text-xs font-bold text-[#5c4028] uppercase tracking-wider mb-1.5">Reason (optional)</label>
-          <input type="text" id="reason" maxlength="80" placeholder="Griefing the wheat farm..." class="parchment-input w-full rounded-lg px-3 py-2.5 text-sm">
+          <label class="block text-xs font-bold text-[#5c3b20] uppercase tracking-wider mb-1.5 font-typewriter">Crime (optional)</label>
+          <input type="text" id="reason" maxlength="80" placeholder="Cattle rustling / griefing the farm..." class="western-input w-full px-3 py-2.5 text-sm">
         </div>
         <div class="flex flex-wrap gap-3 pt-1">
-          <button type="submit" class="btn-emerald px-6 py-2.5 rounded-lg text-sm font-bold tracking-wide">Post Bounty</button>
-          <button type="button" onclick="loadSampleBounties()" class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#3a2a1a] text-amber-200/80 border border-amber-700/40 hover:bg-[#4a3520] transition">Load Sample Targets</button>
+          <button type="submit" class="btn-brass-nail px-6 py-2.5 text-sm font-bold tracking-wide uppercase">Nail Poster</button>
+          <button type="button" onclick="loadSampleBounties()" class="px-4 py-2.5 text-sm font-bold bg-[#3a2a1a] text-amber-200/80 border border-amber-700/40 hover:bg-[#4a3520] transition rounded">Load Sample Outlaws</button>
         </div>
       </form>
     </div>
 
     <!-- Bounty List -->
-    <div class="board-inner-well rounded-xl p-4 sm:p-5 min-h-[280px] relative">
-      <div id="loadingOverlay" class="loading-overlay hidden">
-        <div class="text-amber-200/90 text-sm font-semibold flex items-center gap-2">
-          <svg class="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="30 70"></circle></svg>
-          Syncing with Guild Hall...
-        </div>
-      </div>
+    <div class="board-plank-well p-4 sm:p-5 min-h-[280px]">
       <div id="bountyList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
     </div>
   </main>
 
-  <p class="mt-8 text-center text-xs text-amber-200/40 relative z-10">
-    All bounties paid in Minecraft diamonds · Shared Guild Board (Firebase)
+  <p class="mt-8 text-center text-xs text-amber-200/40 relative z-10 font-typewriter">
+    All bounties paid in Minecraft diamonds · Shared Sheriff Board
   </p>
 
   <!-- Modal -->
   <div id="actionModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 transition-opacity duration-200">
-    <div id="actionModalCard" class="parchment-sheet max-w-sm w-full rounded-2xl p-6 scale-95 transition-transform duration-200">
+    <div id="actionModalCard" class="western-parchment max-w-sm w-full p-6 scale-95 transition-transform duration-200">
       <div class="text-center mb-5">
-        <img id="modalAvatar" src="" class="mc-avatar-frame w-16 h-16 rounded-xl mx-auto mb-3 object-cover" alt="">
-        <h3 id="modalTargetName" class="font-serif-title text-xl font-bold text-[#261409]"></h3>
-        <p id="modalRewardText" class="text-sm text-[#5c4028] mt-1"></p>
+        <img id="modalAvatar" src="" class="western-portrait-frame w-16 h-16 mx-auto mb-3 object-cover" alt="">
+        <h3 id="modalTargetName" class="font-western text-xl text-[#261409]"></h3>
+        <p id="modalRewardText" class="text-sm text-[#5c4028] mt-1 font-typewriter"></p>
       </div>
       <div class="flex flex-col gap-2.5">
-        <button id="confirmClaimBtn" class="btn-emerald w-full py-2.5 rounded-lg text-sm font-bold">Claim Bounty (Collect Diamonds)</button>
-        <button id="confirmRemoveBtn" class="w-full py-2.5 rounded-lg text-sm font-semibold bg-red-900/15 text-red-900 border border-red-900/30 hover:bg-red-900/25 transition">Tear Down Notice</button>
+        <button id="confirmClaimBtn" class="btn-brass-nail w-full py-2.5 text-sm font-bold uppercase">Claim Bounty</button>
+        <button id="confirmRemoveBtn" class="w-full py-2.5 text-sm font-bold bg-red-900/15 text-red-900 border border-red-900/30 hover:bg-red-900/25 transition rounded">Tear Down Poster</button>
         <button onclick="closeModal()" class="w-full py-2 text-sm text-[#5c4028]/70 hover:text-[#5c4028] transition">Cancel</button>
       </div>
     </div>
@@ -363,7 +373,7 @@
 
     const FALLBACK_AVATAR = 'https://mc-heads.net/avatar/Steve/64';
 
-    // Live listener – everyone sees changes instantly
+    // Live listener
     bountiesRef.on('value', (snapshot) => {
       const data = snapshot.val() || {};
       bounties = Object.keys(data).map(key => ({
@@ -376,10 +386,9 @@
     }, (error) => {
       console.error(error);
       document.getElementById('syncStatus').textContent = 'Error';
-      showToast('Connection to Guild Hall failed', 'warning');
+      showToast('Connection to the Sheriff Office failed', 'warning');
     });
 
-    // ---------- Rest of the logic ----------
     function formatStacks(amount) {
       if (amount < 64) return '';
       const stacks = Math.floor(amount / 64);
@@ -387,18 +396,9 @@
       return leftover ? `${stacks}s + ${leftover}` : `${stacks} stacks`;
     }
 
-    function getTier(amount) {
-      if (amount >= 512) return { label: 'Legendary', sealColor: '#7c3aed' };
-      if (amount >= 256) return { label: 'Epic', sealColor: '#b45309' };
-      if (amount >= 128) return { label: 'Rare', sealColor: '#0369a1' };
-      if (amount >= 64) return { label: 'Uncommon', sealColor: '#15803d' };
-      return { label: 'Common', sealColor: '#6b7280' };
-    }
-
     function renderBoard(useFlip = false) {
       const list = document.getElementById('bountyList');
 
-      // Stats
       document.getElementById('statCount').textContent = bounties.length;
       const total = bounties.reduce((sum, b) => sum + (b.amount || 0), 0);
       document.getElementById('statPool').textContent = total.toLocaleString() + ' ♦';
@@ -407,7 +407,7 @@
         list.innerHTML = `
           <div class="col-span-full text-center py-16 text-amber-200/50">
             <div class="text-4xl mb-3 opacity-40">📜</div>
-            <p class="text-sm">No active contracts on the board.<br>Be the first to post a bounty.</p>
+            <p class="text-sm font-typewriter">No active wanted posters.<br>Be the first to nail one up.</p>
           </div>`;
         return;
       }
@@ -415,7 +415,6 @@
       list.innerHTML = bounties.map((b, i) => {
         const rot = ((i * 7) % 5 - 2) * 0.7;
         const avatarUrl = `https://mc-heads.net/avatar/${encodeURIComponent(b.name)}/64`;
-        const tier = getTier(b.amount);
         const stackStr = formatStacks(b.amount);
         const isNew = b.id === newlyAddedId;
 
@@ -427,52 +426,56 @@
             onmousemove="handleCardTilt(event, this)"
             onmouseleave="resetCardTilt(this)"
           >
-            <div class="brass-tack"></div>
-            <div class="bounty-card-inner paper-lines">
+            <div class="iron-nail"></div>
+            <div class="bounty-card-inner">
               <div class="card-sheen"></div>
+              <div class="captured-stamp">CAPTURED</div>
 
               <div class="relative z-10 flex justify-end mb-1">
                 <button type="button" onclick="openResolveModal('${b.id}')"
-                  class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold text-red-900/75 hover:text-red-950 bg-red-900/10 hover:bg-red-900/20 border border-red-900/15 transition">
+                  class="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-red-900/75 hover:text-red-950 bg-red-900/10 hover:bg-red-900/20 border border-red-900/15 transition">
                   <span>Resolve</span>
-                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
               </div>
 
               <div class="text-center border-y border-red-900/25 py-1 mb-3 bg-red-950/[0.04]">
-                <span class="font-display text-xs font-black tracking-[0.28em] text-[#8f1d1d] uppercase">Wanted</span>
+                <span class="font-western text-xs font-black tracking-[0.28em] text-[#8f1d1d] uppercase">Wanted</span>
               </div>
 
               <div class="flex flex-col items-center text-center my-2">
                 <div class="relative mb-2.5">
                   <img src="${avatarUrl}" alt="${escapeHtml(b.name)}"
                     onerror="this.onerror=null; this.src='${FALLBACK_AVATAR}';"
-                    class="mc-avatar-frame w-16 h-16 rounded-lg object-cover transition-transform duration-300 group-hover:scale-105">
-                  <div class="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-serif-title font-black text-amber-100 shadow-md border border-amber-200/40"
-                    style="background: radial-gradient(circle at 35% 35%, #dc2626, ${tier.sealColor});">⚔</div>
+                    class="western-portrait-frame w-16 h-16 object-cover transition-transform duration-300 group-hover:scale-105">
                 </div>
-                <h4 class="font-serif-title text-lg sm:text-xl font-extrabold text-[#261409] leading-tight break-words max-w-full px-1">
+                <h4 class="font-western text-lg sm:text-xl text-[#241105] leading-snug break-words max-w-full px-1">
                   ${escapeHtml(b.name)}
                 </h4>
-                ${b.reason ? `<p class="mt-1.5 text-xs italic text-[#5c3d24] line-clamp-2 px-2">“${escapeHtml(b.reason)}”</p>` 
-                  : `<p class="mt-1 text-[11px] text-[#7a5638]/75">Dead or Alive · Bring Proof</p>`}
+                <p class="mt-1.5 font-typewriter text-xs font-bold text-[#5c381c] line-clamp-2 px-2">
+                  ${b.reason ? `“${escapeHtml(b.reason)}”` : '“Wanted for Frontier Lawlessness”'}
+                </p>
               </div>
 
-              <div class="mt-3 pt-2">
-                <div class="mc-diamond-badge rounded-lg px-3 py-2.5 flex items-center justify-between gap-2">
+              <div class="relative z-10 mt-3 pt-2 border-t border-dashed border-amber-950/30 space-y-2">
+                <div class="text-center font-typewriter text-[10px] font-bold uppercase tracking-[0.24em] text-[#5c381c]">— Reward —</div>
+                <div class="mc-diamond-plaque px-3 py-2 flex items-center justify-between gap-2">
                   <div class="flex items-center gap-2 min-w-0">
-                    <svg class="w-5 h-5 shrink-0 drop-shadow-[0_0_6px_rgba(77,238,234,0.65)]" viewBox="0 0 24 24" fill="none">
-                      <polygon points="12 2 21 9 12 22 3 9" fill="#22d3ee"/>
-                      <polygon points="12 2 21 9 12 11" fill="#cffafe"/>
-                      <polygon points="12 2 3 9 12 11" fill="#67e8f9"/>
-                      <polygon points="12 11 21 9 12 22" fill="#0e7490"/>
+                    <svg class="w-5 h-5 shrink-0 drop-shadow-[0_0_6px_rgba(77,238,234,0.75)]" viewBox="0 0 16 16" shape-rendering="crispEdges">
+                      <path fill="#0e4f5c" d="M6 2h4v1h2v1h1v2h1v4h-1v2h-1v1h-2v1H6v-1H4v-1H3v-2H2V6h1V4h1V3h2V2z"/>
+                      <path fill="#1cbec9" d="M6 3h4v1h2v2h1v4h-1v2h-2v1H6v-1H4v-2H3V6h1V4h2V3z"/>
+                      <path fill="#6ef7f7" d="M6 4h4v1h1v2H9v2H7V7H5V5h1V4z"/>
+                      <path fill="#d4ffff" d="M6 4h2v2H6V4zm-1 2h1v1H5V6z"/>
                     </svg>
-                    <span class="font-mono-num text-sm sm:text-base font-bold text-[#f7e39c] truncate">
-                      ${Number(b.amount).toLocaleString()} <span class="text-xs font-semibold text-cyan-300">Diamonds</span>
+                    <span class="font-pixel text-[11px] sm:text-xs text-[#f7e39c] truncate">
+                      ${Number(b.amount).toLocaleString()} <span class="font-typewriter text-xs font-bold text-cyan-300">DIAMONDS</span>
                     </span>
                   </div>
-                  ${stackStr ? `<span class="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono-num font-bold bg-cyan-400/15 text-cyan-200 border border-cyan-400/25">${stackStr}</span>` : ''}
+                  ${stackStr ? `<span class="shrink-0 px-1.5 py-0.5 text-[10px] font-typewriter font-bold bg-cyan-400/15 text-cyan-200 border border-cyan-400/35">${stackStr}</span>` : ''}
                 </div>
+                <button type="button" onclick="claimBountyDirect('${b.id}')"
+                  class="w-full py-2 px-3 font-western text-xs tracking-wider uppercase bg-[#8f1d16] hover:bg-[#a8221a] active:translate-y-0.5 text-amber-100 border-t-2 border-l-2 border-red-400/45 border-r-2 border-b-2 border-[#470a06] shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+                  <span>★</span><span>Claim Bounty</span>
+                </button>
               </div>
             </div>
           </article>
@@ -483,7 +486,7 @@
     }
 
     function handleCardTilt(e, card) {
-      if (card.classList.contains('animate-poster-tear')) return;
+      if (card.classList.contains('animate-poster-tear') || card.classList.contains('is-captured')) return;
       const rect = card.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -494,20 +497,20 @@
       card.style.setProperty('--mx', `${(px * 100).toFixed(1)}%`);
       card.style.setProperty('--my', `${(py * 100).toFixed(1)}%`);
       card.style.transition = 'transform 0.08s ease-out';
-      card.style.transform = `perspective(700px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-5px) scale(1.02)`;
+      card.style.transform = `perspective(900px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-5px) scale(1.02)`;
       card.style.zIndex = '20';
     }
 
     function resetCardTilt(card) {
-      if (card.classList.contains('animate-poster-tear')) return;
+      if (card.classList.contains('animate-poster-tear') || card.classList.contains('is-captured')) return;
       card.style.transition = 'transform 0.35s cubic-bezier(0.22,1,0.36,1)';
       card.style.transform = 'rotate(var(--base-rot, 0deg))';
       card.style.zIndex = '';
     }
 
-    // Live preview
     const nameInputEl = document.getElementById('name');
     const amountInputEl = document.getElementById('amount');
+    const reasonInputEl = document.getElementById('reason');
     const previewHeadEl = document.getElementById('previewHead');
     const stackHelperEl = document.getElementById('stackHelper');
 
@@ -535,29 +538,37 @@
       e.preventDefault();
       const name = nameInputEl.value.trim();
       const amount = parseInt(amountInputEl.value, 10);
-      const reason = document.getElementById('reason').value.trim();
+      const reason = reasonInputEl.value.trim();
 
-      if (!name) { showToast('Enter a target player name!', 'warning'); nameInputEl.focus(); return; }
-      if (!amount || amount < 1) { showToast('Bounty must be at least 1 diamond!', 'warning'); amountInputEl.focus(); return; }
+      if (!name) { showToast('Name the outlaw first, partner!', 'warning'); nameInputEl.focus(); return; }
+      if (!amount || amount < 1) { showToast('Put at least 1 diamond on their head!', 'warning'); amountInputEl.focus(); return; }
 
       const newRef = bountiesRef.push();
-      const newEntry = {
+      newlyAddedId = newRef.key;
+      newRef.set({
         name,
         amount,
         reason,
         createdAt: Date.now()
-      };
+      });
 
-      newlyAddedId = newRef.key;
-      newRef.set(newEntry);
+      // Hammer thud
+      const boardEl = document.getElementById('mainBoard');
+      boardEl.classList.remove('animate-board-thud');
+      void boardEl.offsetWidth;
+      boardEl.classList.add('animate-board-thud');
 
       nameInputEl.value = '';
       amountInputEl.value = '';
-      document.getElementById('reason').value = '';
+      reasonInputEl.value = '';
       stackHelperEl.textContent = '';
       previewHeadEl.src = 'https://mc-heads.net/avatar/Steve/40';
 
-      showToast(`Wanted poster pinned for ${name} (${amount.toLocaleString()} ♦)`, 'success');
+      showToast(`Wanted poster nailed up for ${name} (${amount.toLocaleString()} ♦)`, 'success');
+    }
+
+    function claimBountyDirect(id) {
+      resolveBounty(id, true);
     }
 
     function openResolveModal(id) {
@@ -603,19 +614,26 @@
 
       const targetBounty = bounties[index];
       const cardEl = document.querySelector(`[data-bounty-id="${id}"]`);
-      closeModal();
+      if (pendingModalId) closeModal();
 
       if (cardEl) {
         const rect = cardEl.getBoundingClientRect();
-        if (isClaimed) spawnDiamondBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
-        cardEl.classList.add('animate-poster-tear');
+        if (isClaimed) {
+          cardEl.classList.add('is-captured');
+          spawnCelebrationBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        }
+
+        const delayBeforeTear = isClaimed ? 340 : 0;
         setTimeout(() => {
-          bountiesRef.child(id).remove();
-          showToast(isClaimed 
-            ? `Bounty claimed! Collected ${Number(targetBounty.amount).toLocaleString()} ♦ for ${targetBounty.name}.` 
-            : `Tore down bounty notice for ${targetBounty.name}.`, 
-            isClaimed ? 'diamond' : 'neutral');
-        }, 360);
+          cardEl.classList.add('animate-poster-tear');
+          setTimeout(() => {
+            bountiesRef.child(id).remove();
+            showToast(isClaimed 
+              ? `Outlaw captured! Claimed ${Number(targetBounty.amount).toLocaleString()} ♦ for ${targetBounty.name}.` 
+              : `Tore down wanted poster for ${targetBounty.name}.`, 
+              isClaimed ? 'diamond' : 'neutral');
+          }, 380);
+        }, delayBeforeTear);
       } else {
         bountiesRef.child(id).remove();
       }
@@ -623,36 +641,33 @@
 
     function loadSampleBounties() {
       const samples = [
-        { name: 'Herobrine', amount: 576, reason: 'Haunting strip mines & removing leaves' },
+        { name: 'Herobrine', amount: 576, reason: 'Haunting the mines' },
         { name: 'Technoblade', amount: 256, reason: 'Unstoppable PvP dominance' },
-        { name: 'Dream', amount: 128, reason: 'Speedrunning away from the server guard' },
-        { name: 'Grian', amount: 64, reason: 'Leaving the backs of mansions unfinished' },
         { name: 'Creeper', amount: 16, reason: 'Destroying the wheat farm again' }
       ];
       const now = Date.now();
       samples.forEach((s, idx) => {
-        const ref = bountiesRef.push();
-        ref.set({
+        bountiesRef.push().set({
           name: s.name,
           amount: s.amount,
           reason: s.reason,
-          createdAt: now - idx * 5000
+          createdAt: now - idx * 3000
         });
       });
-      showToast('Pinned 5 notorious Guild bounties!', 'success');
+      showToast('Nailed 3 classic frontier wanted posters!', 'success');
     }
 
     function showToast(message, type = 'neutral') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       const styles = {
-        success: 'bg-[#1f3615] border-emerald-400/50 text-emerald-100',
-        diamond: 'bg-[#112c33] border-cyan-400/60 text-cyan-100',
-        warning: 'bg-[#3d1e12] border-amber-400/60 text-amber-100',
-        neutral: 'bg-[#2b1a0e] border-amber-500/35 text-amber-100'
+        success: 'bg-[#2b1a0c] border-amber-400/65 text-amber-100',
+        diamond: 'bg-[#122b30] border-cyan-400/65 text-cyan-100',
+        warning: 'bg-[#3d1710] border-red-400/65 text-amber-100',
+        neutral: 'bg-[#26150a] border-amber-500/40 text-amber-100'
       };
-      toast.className = `toast-enter pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl backdrop-blur-md text-xs sm:text-sm font-semibold ${styles[type] || styles.neutral}`;
-      toast.innerHTML = `<span class="w-2 h-2 rounded-full shrink-0 ${type === 'diamond' ? 'bg-cyan-400' : type === 'success' ? 'bg-emerald-400' : 'bg-amber-400'}"></span><span class="flex-1 leading-snug">${escapeHtml(message)}</span>`;
+      toast.className = `toast-enter pointer-events-auto flex items-center gap-3 px-4 py-3 border-t-2 border-l-2 border-r-2 border-b-2 shadow-2xl backdrop-blur-md font-typewriter text-xs sm:text-sm font-bold ${styles[type] || styles.neutral}`;
+      toast.innerHTML = `<span class="text-sm shrink-0 ${type === 'diamond' ? 'text-cyan-300' : 'text-amber-400'}">★</span><span class="flex-1 leading-snug">${escapeHtml(message)}</span>`;
       container.appendChild(toast);
       setTimeout(() => {
         toast.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
@@ -668,13 +683,13 @@
       return div.innerHTML;
     }
 
-    // Particle engines
+    // Particles
     const ambientCanvas = document.getElementById('ambientCanvas');
     const aCtx = ambientCanvas.getContext('2d');
     const burstCanvas = document.getElementById('burstCanvas');
     const bCtx = burstCanvas.getContext('2d');
-    let embers = [];
-    let diamondParticles = [];
+    let dustMotes = [];
+    let celebrationParticles = [];
 
     function resizeCanvases() {
       ambientCanvas.width = window.innerWidth;
@@ -683,57 +698,60 @@
       burstCanvas.height = window.innerHeight;
     }
 
-    function initEmbers() {
-      const count = Math.min(38, Math.floor(window.innerWidth / 32));
-      embers = Array.from({ length: count }, () => ({
+    function initDustMotes() {
+      const count = Math.min(44, Math.floor(window.innerWidth / 28));
+      dustMotes = Array.from({ length: count }, () => ({
         x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight,
-        r: Math.random() * 2 + 0.8, vy: -(Math.random() * 0.35 + 0.12),
-        vx: (Math.random() - 0.5) * 0.25, alpha: Math.random() * 0.45 + 0.15, phase: Math.random() * Math.PI * 2
+        r: Math.random() * 2.2 + 0.7, vx: Math.random() * 0.35 + 0.08,
+        vy: -(Math.random() * 0.25 + 0.05), alpha: Math.random() * 0.45 + 0.14, phase: Math.random() * Math.PI * 2
       }));
     }
 
-    function spawnDiamondBurst(cx, cy) {
-      for (let i = 0; i < 34; i++) {
-        const angle = (Math.PI * 2 * i) / 34 + (Math.random() - 0.5) * 0.3;
-        const speed = Math.random() * 6.5 + 2.5;
-        diamondParticles.push({
-          x: cx, y: cy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2.2,
-          size: Math.random() * 6 + 5, rot: Math.random() * Math.PI, vRot: (Math.random() - 0.5) * 0.2,
-          life: 1, decay: Math.random() * 0.018 + 0.014,
-          color: i % 3 === 0 ? '#a5f3fc' : i % 2 === 0 ? '#22d3ee' : '#fde047'
+    function spawnCelebrationBurst(cx, cy) {
+      for (let i = 0; i < 40; i++) {
+        const angle = (Math.PI * 2 * i) / 40 + (Math.random() - 0.5) * 0.3;
+        const speed = Math.random() * 7 + 2.5;
+        celebrationParticles.push({
+          x: cx, y: cy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2.4,
+          size: Math.random() * 6.5 + 4.5, rot: Math.random() * Math.PI, vRot: (Math.random() - 0.5) * 0.22,
+          life: 1, decay: Math.random() * 0.017 + 0.013, isDiamond: i % 2 === 0,
+          color: i % 3 === 0 ? '#a5f3fc' : i % 2 === 0 ? '#22d3ee' : '#f59e0b'
         });
       }
     }
 
     function animateCanvases() {
       aCtx.clearRect(0, 0, ambientCanvas.width, ambientCanvas.height);
-      for (const p of embers) {
-        p.x += p.vx + Math.sin(p.phase) * 0.15; p.y += p.vy; p.phase += 0.02;
-        if (p.y < -10) { p.y = ambientCanvas.height + 10; p.x = Math.random() * ambientCanvas.width; }
-        if (p.x < -10) p.x = ambientCanvas.width + 10;
-        if (p.x > ambientCanvas.width + 10) p.x = -10;
-        aCtx.beginPath(); aCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        aCtx.fillStyle = `rgba(255, 190, 105, ${p.alpha * (0.7 + 0.3 * Math.sin(p.phase))})`; aCtx.fill();
+      for (const p of dustMotes) {
+        p.x += p.vx; p.y += p.vy + Math.sin(p.phase) * 0.16; p.phase += 0.018;
+        if (p.x > ambientCanvas.width + 10) { p.x = -10; p.y = Math.random() * ambientCanvas.height; }
+        if (p.y < -10) p.y = ambientCanvas.height + 10;
+        const blockSize = Math.max(2, Math.round(p.r * 1.8));
+        aCtx.fillStyle = `rgba(245, 185, 95, ${p.alpha * (0.65 + 0.35 * Math.sin(p.phase))})`;
+        aCtx.fillRect(Math.round(p.x), Math.round(p.y), blockSize, blockSize);
       }
 
       bCtx.clearRect(0, 0, burstCanvas.width, burstCanvas.height);
-      for (let i = diamondParticles.length - 1; i >= 0; i--) {
-        const d = diamondParticles[i];
+      for (let i = celebrationParticles.length - 1; i >= 0; i--) {
+        const d = celebrationParticles[i];
         d.x += d.vx; d.y += d.vy; d.vy += 0.22; d.vx *= 0.98; d.rot += d.vRot; d.life -= d.decay;
-        if (d.life <= 0) { diamondParticles.splice(i, 1); continue; }
-        bCtx.save(); bCtx.translate(d.x, d.y); bCtx.rotate(d.rot); bCtx.globalAlpha = Math.max(0, d.life);
-        bCtx.fillStyle = d.color; bCtx.beginPath();
-        bCtx.moveTo(0, -d.size); bCtx.lineTo(d.size * 0.75, 0); bCtx.lineTo(0, d.size); bCtx.lineTo(-d.size * 0.75, 0);
-        bCtx.closePath(); bCtx.fill(); bCtx.restore();
+        if (d.life <= 0) { celebrationParticles.splice(i, 1); continue; }
+        bCtx.save(); bCtx.translate(Math.round(d.x), Math.round(d.y)); bCtx.rotate(d.rot); bCtx.globalAlpha = Math.max(0, d.life);
+        bCtx.fillStyle = d.color;
+        if (d.isDiamond) {
+          bCtx.beginPath(); bCtx.moveTo(0, -d.size); bCtx.lineTo(d.size * 0.75, 0); bCtx.lineTo(0, d.size); bCtx.lineTo(-d.size * 0.75, 0); bCtx.closePath(); bCtx.fill();
+        } else {
+          const s = Math.round(d.size * 1.15); bCtx.fillRect(-s/2, -s/2, s, s);
+        }
+        bCtx.restore();
       }
       requestAnimationFrame(animateCanvases);
     }
 
     window.addEventListener('resize', resizeCanvases);
-
     window.onload = function () {
       resizeCanvases();
-      initEmbers();
+      initDustMotes();
       animateCanvases();
     };
   </script>
