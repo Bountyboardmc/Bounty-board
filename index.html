@@ -3,25 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Syndikat-Kontrakte | Schattennetz</title>
+<title>Server Quest-Tafel // Abenteuer & Aufträge</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Special+Elite&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=MedievalSharp&display=swap" rel="stylesheet">
 <style>
   :root {
-    --wood-1: #0d0907;
-    --wood-2: #050403;
-    --wood-line: #020101;
-    --paper: #181614;
-    --paper-dark: #24201d;
-    --paper-border: #3d352e;
-    --text: #c8b9a6;
-    --blood: #8a1c1c;
-    --blood-glow: rgba(138, 28, 28, 0.4);
-    --gold: #b38f36;
+    --wood-1: #1a0f07;
+    --wood-2: #110904;
+    --wood-line: #070301;
+    --paper: #b0955d;
+    --paper-dark: #8c713f;
+    --ink: #120803;
+    --accent: #2e6129; /* Dunkelgrün für Quests/Erfolg */
+    --gold: #c29b38;
     --ease: cubic-bezier(.22, 1, .36, 1);
-    --head: "Share Tech Mono", "Courier New", monospace;
-    --body: "Special Elite", "Courier New", monospace;
+    --head: "Cinzel", Georgia, serif;
+    --body: "MedievalSharp", cursive, monospace;
   }
   * { box-sizing: border-box; }
   html { background: var(--wood-2); }
@@ -29,34 +27,34 @@
     margin: 0;
     min-height: 100vh;
     font-family: var(--body);
-    font-size: 16px;
+    font-size: 18px;
     line-height: 1.4;
-    color: var(--text);
+    color: var(--ink);
     padding: 36px 16px 80px;
     overflow-x: hidden;
     background:
       /* Holzmuster-Rillen */
-      repeating-linear-gradient(0deg, rgba(0,0,0,.35) 0 1px, transparent 1px 6px),
-      /* Dunkle, massive Holzbohlen */
+      repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 5px),
+      /* Realistische Holzbohlen */
       repeating-linear-gradient(90deg, 
-        #030201 0px, 
-        #070504 4px, 
-        #110c08 20px, 
-        #0a0705 130px, 
-        #040302 138px, 
-        #030201 142px
+        #060201 0px, 
+        #0d0603 3px, 
+        #1c0f07 18px, 
+        #140a04 125px, 
+        #0a0402 137px, 
+        #060201 140px
       ),
       linear-gradient(180deg, var(--wood-1), var(--wood-2));
   }
   main { position: relative; z-index: 2; max-width: 940px; margin: 0 auto; }
 
-  /* Atmosphäre: Schatten, Staub, kaltes Licht */
+  /* Atmosphäre: Nebel, Staub, Laternenlicht */
   .fog {
     position: fixed; left: -20%; right: -20%; bottom: -10%; height: 45%;
     pointer-events: none; z-index: 1;
     background:
-      radial-gradient(ellipse at 20% 80%, rgba(30,25,20,.15), transparent 60%),
-      radial-gradient(ellipse at 70% 90%, rgba(20,15,10,.2), transparent 55%);
+      radial-gradient(ellipse at 20% 80%, rgba(150,140,120,.06), transparent 60%),
+      radial-gradient(ellipse at 70% 90%, rgba(150,140,120,.05), transparent 55%);
     animation: fog 40s ease-in-out infinite alternate;
   }
   @keyframes fog { from { transform: translateX(-5%); } to { transform: translateX(5%); } }
@@ -65,262 +63,244 @@
   .dust i {
     position: absolute; top: 100%; left: var(--x);
     width: var(--s); height: var(--s); border-radius: 50%;
-    background: rgba(180,160,140,.25);
+    background: rgba(205,175,120,.4);
     opacity: 0;
     animation: drift var(--d) linear var(--l) infinite;
   }
   @keyframes drift {
     0% { transform: translate(0, 0); opacity: 0; }
-    12% { opacity: .5; }
-    88% { opacity: .2; }
+    12% { opacity: .7; }
+    88% { opacity: .4; }
     100% { transform: translate(var(--dx), -112vh); opacity: 0; }
   }
 
   #light {
     position: fixed; inset: 0; pointer-events: none; z-index: 50;
-    background: radial-gradient(circle var(--r, 450px) at var(--mx, 50%) var(--my, 35%),
-      rgba(138,28,28,.04) 0%, rgba(0,0,0,0) 55%, rgba(2,1,0,.85) 100%);
+    background: radial-gradient(circle var(--r, 420px) at var(--mx, 50%) var(--my, 35%),
+      rgba(255,200,100,.06) 0%, rgba(0,0,0,0) 50%, rgba(2,1,0,.6) 100%);
   }
 
-  /* Terminal-Schild */
+  /* Titelschild */
   .sign {
     position: relative;
     text-align: center;
-    background: linear-gradient(180deg, #140d0a, var(--wood-1));
-    border: 3px solid var(--paper-border);
-    outline: 2px solid var(--gold);
-    outline-offset: -8px;
-    padding: 24px 20px;
+    background: linear-gradient(180deg, #241409, var(--wood-1));
+    border: 6px solid var(--wood-line);
+    outline: 3px solid var(--gold);
+    outline-offset: -12px;
+    padding: 26px 20px 22px;
     margin: 0 auto 40px;
     max-width: 680px;
-    box-shadow: 0 16px 30px rgba(0,0,0,.8);
+    box-shadow: 0 12px 0 rgba(0,0,0,.65);
+    transform-origin: 50% 0;
+    animation: signDrop 1.3s var(--ease) both;
+  }
+  @keyframes signDrop {
+    0% { opacity: 0; transform: translateY(-120px) rotate(-3deg); }
+    55% { opacity: 1; transform: translateY(8px) rotate(1.2deg); }
+    78% { transform: translateY(0) rotate(-.5deg); }
+    100% { transform: none; }
   }
   .sign h1 {
     font-family: var(--head);
     font-weight: 700;
-    letter-spacing: 3px;
-    font-size: clamp(28px, 7vw, 48px);
-    line-height: 1;
-    margin: 0 0 6px;
-    color: #dfd0be;
-    text-shadow: 0 0 10px rgba(138,28,28,.5);
+    font-size: clamp(28px, 7vw, 52px);
+    line-height: 1.1;
+    margin: 0 0 8px;
+    color: #e3cfa0;
+    text-shadow: 2px 2px 0 #000;
   }
-  .sign p { margin: 0; color: var(--gold); font-size: 14px; letter-spacing: 1px; font-family: var(--head); }
+  .sign p { margin: 0; color: #a88c55; font-size: 16px; }
 
-  /* Dossier / Formular */
-  .dossier {
+  /* Papierformular */
+  .paper {
     position: relative;
-    background: var(--paper);
-    border: 2px solid var(--paper-border);
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.12), transparent 55%),
+      radial-gradient(ellipse at 100% 100%, rgba(50,20,5,.45), transparent 60%),
+      var(--paper);
+    border: 3px solid var(--ink);
     box-shadow:
-      inset 0 0 30px rgba(0,0,0,.9),
-      0 12px 25px rgba(0,0,0,.7);
-    padding: 30px 24px 24px;
-    max-width: 600px;
-    margin: 0 auto 52px;
+      inset 0 0 45px rgba(40,16,3,.7),
+      inset 0 0 8px rgba(0,0,0,.75),
+      6px 8px 0 rgba(0,0,0,.7);
+    padding: 26px 22px 22px;
   }
-  .dossier::before {
-    content: "STRIKT GEHEIM // BLACKSITE DOSSIER";
+  .paper::before, .paper::after {
+    content: "";
     position: absolute;
-    top: -12px;
-    left: 24px;
-    background: var(--wood-2);
-    padding: 0 10px;
-    font-size: 11px;
-    color: var(--blood);
-    font-family: var(--head);
-    letter-spacing: 2px;
+    top: 8px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #777, #0d0d0d);
   }
+  .paper::before { left: 8px; }
+  .paper::after { right: 8px; }
 
-  .dossier h2 {
+  .form {
+    max-width: 580px;
+    margin: 0 auto 52px;
+    rotate: -.5deg;
+    animation: rise 1s var(--ease) .55s both;
+  }
+  @keyframes rise { from { opacity: 0; translate: 0 40px; } to { opacity: 1; translate: 0 0; } }
+  .form h2 {
     font-family: var(--head);
     font-weight: 700;
-    letter-spacing: 2px;
-    font-size: 24px;
+    font-size: 26px;
     text-align: center;
     margin: 0 0 4px;
-    color: #dfd0be;
+    color: var(--ink);
   }
-  .dossier .sub { text-align: center; margin: 0 0 18px; border-bottom: 1px dashed var(--paper-border); padding-bottom: 10px; font-size: 14px; color: #887868; }
+  .form .sub { text-align: center; margin: 0 0 20px; border-bottom: 2px solid var(--ink); padding-bottom: 12px; font-size: 16px; }
 
   .rule-notice {
-    font-size: 13px;
-    background: rgba(138, 28, 28, 0.15);
-    border-left: 3px solid var(--blood);
+    font-size: 14px;
+    background: rgba(46, 97, 41, 0.12);
+    border-left: 3px solid var(--accent);
     padding: 10px 12px;
-    margin-bottom: 20px;
-    color: #d6c6b2;
+    margin-bottom: 18px;
+    color: var(--ink);
     line-height: 1.4;
   }
 
-  label { display: block; font-size: 14px; margin-bottom: 4px; color: #a39382; font-family: var(--head); letter-spacing: 1px; }
+  label { display: block; font-size: 15px; margin-bottom: 4px; font-family: var(--head); font-weight: 600; }
   .field { margin-bottom: 18px; }
   
   input[type="text"], input[type="number"] {
     width: 100%;
     font: inherit;
     font-size: 20px;
-    color: #f2e9de;
-    background: #0f0c0a;
-    border: 2px solid var(--paper-border);
+    color: var(--ink);
+    background: rgba(0,0,0,.12);
+    border: 2px solid var(--ink);
     border-radius: 0;
-    padding: 10px 14px;
-    transition: border-color .3s, box-shadow .3s;
+    padding: 8px 12px;
+    transition: background .3s var(--ease), box-shadow .3s var(--ease);
   }
-  input:hover { border-color: var(--gold); }
-  input:focus { border-color: var(--blood); box-shadow: 0 0 0 2px var(--blood-glow); outline: none; }
-  input::placeholder { color: #554a40; }
+  input:hover { background: rgba(0,0,0,.18); }
+  input:focus { background: rgba(0,0,0,.24); box-shadow: 0 0 0 3px rgba(46,97,41,.4); outline: none; }
+  input::placeholder { color: rgba(18,8,3,.4); }
   
-  button:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
-  .hint { font-size: 12px; margin-top: 4px; min-height: 1.4em; color: #887868; transition: color .3s; }
-  .hint.error { color: #ff6b6b; font-weight: bold; }
+  button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .hint { font-size: 13px; margin-top: 4px; min-height: 1.4em; transition: color .3s; }
+  .hint.error { color: #8a1c1c; font-weight: bold; }
 
   .amount-wrap { position: relative; }
-  .amount-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); }
-  .amount-wrap input { padding-left: 52px; }
+  .amount-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); }
+  .amount-wrap input { padding-left: 50px; }
   .quick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 
   button {
-    font-family: var(--head);
-    letter-spacing: 1px;
-    font-size: 14px;
-    color: var(--text);
+    font-family: var(--body);
+    font-size: 16px;
+    color: var(--ink);
     background: var(--paper-dark);
-    border: 1px solid var(--paper-border);
+    border: 2px solid var(--ink);
     border-radius: 0;
-    padding: 8px 12px;
+    padding: 7px 12px;
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,.4);
-    transition: all .2s var(--ease);
+    box-shadow: 2px 3px 0 var(--ink);
+    transition: background .3s var(--ease), translate .18s var(--ease), box-shadow .18s var(--ease);
   }
-  button:hover { background: #352e28; color: #fff; border-color: var(--gold); }
-  button:active { transform: translateY(1px); }
-  button:disabled { cursor: default; opacity: .5; }
+  button:hover { background: #73582e; color: #f5e6c8; }
+  button:active { translate: 2px 3px; box-shadow: 0 0 0 var(--ink); }
+  button:disabled { cursor: default; opacity: .6; }
   
   button.primary {
     width: 100%;
-    font-size: 18px;
-    color: #fff;
-    background: var(--blood);
-    border: 1px solid #aa2222;
-    padding: 14px;
-    box-shadow: 0 4px 12px rgba(138,28,28,.4);
-    margin-top: 6px;
+    font-family: var(--head);
+    font-weight: 700;
+    font-size: 20px;
+    color: #e3cfa0;
+    background: var(--accent);
+    border: 2px solid var(--ink);
+    padding: 12px;
+    box-shadow: 3px 4px 0 var(--ink);
   }
-  button.primary:hover { background: #a32222; box-shadow: 0 6px 18px rgba(138,28,28,.6); }
+  button.primary:hover { background: #234d1f; box-shadow: 3px 4px 0 var(--ink), 0 0 20px rgba(46,97,41,.4); }
 
   h3.board-title {
     font-family: var(--head);
     font-weight: 700;
-    letter-spacing: 2px;
-    font-size: 24px;
-    color: #dfd0be;
-    text-shadow: 2px 2px 0 #000;
+    font-size: 28px;
+    color: #c4aa72;
+    text-shadow: 2px 2px 0 var(--wood-line);
     margin: 0 0 24px;
     text-align: center;
   }
-  .empty { text-align: center; color: #776858; margin: 0; font-family: var(--head); letter-spacing: 1px; }
+  .empty { text-align: center; color: #8c713f; margin: 0; }
 
-  /* Kontrakt-Karten (Dossiers) */
-  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 30px 24px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
-  li.contract-card {
-    position: relative;
-    background: var(--paper);
-    border: 2px solid var(--paper-border);
-    padding: 24px 16px 18px;
+  /* Quest-Zettel */
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 34px 26px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+  li.quest-card {
+    --tilt: 0deg;
+    rotate: var(--tilt);
+    transform-origin: 50% 10px;
+    padding: 34px 16px 16px;
     text-align: center;
-    box-shadow: 0 8px 20px rgba(0,0,0,.6);
-    transition: transform .3s var(--ease), box-shadow .3s var(--ease);
+    animation: sway var(--sway, 8s) ease-in-out infinite;
+    transition: scale .5s var(--ease), box-shadow .5s var(--ease);
   }
-  li.contract-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(138,28,28,.25);
-    border-color: var(--gold);
+  @keyframes sway {
+    0%, 100% { rotate: var(--tilt); }
+    50% { rotate: calc(var(--tilt) + .9deg); }
   }
-  li.contract-card.leaving { pointer-events: none; }
+  li.quest-card:hover {
+    scale: 1.04;
+    z-index: 5;
+    box-shadow:
+      inset 0 0 45px rgba(40,16,3,.7), inset 0 0 8px rgba(0,0,0,.75),
+      10px 16px 0 rgba(0,0,0,.6), 0 0 34px rgba(46,97,41,.2);
+  }
+  li.quest-card::before {
+    left: 50%; top: 9px; translate: -50% 0;
+    width: 12px; height: 12px;
+  }
+  li.quest-card::after { display: none; }
+  li.quest-card.leaving { pointer-events: none; }
 
-  .contract-card .target-badge {
-    font-family: var(--head);
-    font-size: 11px;
-    letter-spacing: 2px;
-    color: var(--blood);
-    background: rgba(138,28,28,.1);
-    border: 1px solid rgba(138,28,28,.3);
-    padding: 3px 8px;
-    display: inline-block;
-    margin-bottom: 8px;
-  }
-  .contract-card .status-line {
-    font-size: 12px;
-    color: #776858;
-    border-top: 1px dashed var(--paper-border);
-    border-bottom: 1px dashed var(--paper-border);
-    margin: 6px 0 12px;
-    padding: 3px 0;
-    font-family: var(--head);
-  }
+  .quest-card .quest-type { font-family: var(--head); font-weight: 700; font-size: 26px; line-height: 1.1; color: var(--accent); margin: 0; }
+  .quest-card .divider { font-size: 13px; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); margin: 8px 0 12px; padding: 2px 0; font-family: var(--head); }
   
-  .photo { 
-    position: relative; 
-    width: 110px; 
-    height: 110px; 
-    margin: 0 auto 12px; 
-    border: 2px solid var(--paper-border); 
-    background: #0f0c0a; 
-    overflow: hidden; 
-  }
-  .photo img { 
-    width: 100%; 
-    height: 100%; 
-    display: block; 
-    object-fit: cover; 
-    filter: grayscale(0.4) contrast(1.2) brightness(0.85); 
-    transition: filter .5s; 
-  }
-  li.contract-card:hover .photo img { filter: grayscale(0) contrast(1.25) brightness(1); }
-  .photo::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 20px rgba(0,0,0,.8); pointer-events: none; }
+  .avatar-box { position: relative; width: 110px; height: 110px; margin: 0 auto 10px; border: 3px solid var(--ink); background: #3d2c18; overflow: hidden; }
+  .avatar-box img { width: 100%; height: 100%; display: block; object-fit: cover; filter: sepia(.7) contrast(1.1) brightness(.9); transition: filter .6s var(--ease); }
+  li.quest-card:hover .avatar-box img { filter: sepia(.3) contrast(1.15) brightness(1); }
+  .avatar-box::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 20px rgba(0,0,0,.7); pointer-events: none; }
 
-  .contract-card .name { font-family: var(--head); font-size: 20px; color: #fff; word-break: break-all; margin-bottom: 4px; letter-spacing: 1px; }
-  .contract-card .client-tag { font-size: 11px; color: #887868; font-style: italic; margin-bottom: 12px; word-break: break-all; }
-  .contract-card .label { font-size: 11px; color: var(--gold); margin: 0; font-family: var(--head); letter-spacing: 1px; }
+  .quest-card .title { font-family: var(--head); font-weight: 700; font-size: 20px; word-break: break-word; margin-bottom: 4px; }
+  .quest-card .issuer-tag { font-size: 13px; color: var(--paper-dark); font-style: italic; margin-bottom: 8px; word-break: break-all; }
+  .quest-card .label { font-size: 13px; margin: 0; }
   
-  .contract-card .reward { 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    gap: 8px; 
-    font-family: var(--head); 
-    font-size: 26px; 
-    color: #fff; 
-    margin-bottom: 12px;
-  }
-  .contract-card .stacks { font-size: 11px; color: #887868; min-height: 1.2em; margin-bottom: 12px; font-family: var(--head); }
-  .contract-card button { width: 100%; }
+  .quest-card .reward { display: flex; justify-content: center; align-items: center; gap: 8px; font-family: var(--head); font-weight: 700; font-size: 26px; color: var(--accent); }
+  .quest-card .stacks { font-size: 13px; min-height: 1.2em; margin-bottom: 12px; }
+  .quest-card button { width: 100%; }
 
-  /* Eliminierungs-Stempel */
+  /* Erledigt-Stempel */
   .stamp {
-    position: absolute; left: 50%; top: 48%;
-    font-family: var(--head); font-weight: 700; font-size: 30px; letter-spacing: 3px;
-    color: var(--blood);
-    border: 4px solid var(--blood);
-    padding: 6px 14px;
+    position: absolute; left: 50%; top: 46%;
+    font-family: var(--head); font-weight: 700; font-size: 30px; letter-spacing: 2px;
+    color: var(--accent);
+    border: 5px solid var(--accent);
+    padding: 4px 14px;
     opacity: 0;
     transform: translate(-50%, -50%) rotate(-12deg);
+    mix-blend-mode: multiply;
     pointer-events: none;
-    box-shadow: 0 0 15px rgba(138,28,28,.6);
   }
-  li.contract-card.leaving .stamp { animation: stamp .35s cubic-bezier(.2, 1.5, .4, 1) forwards; }
+  li.quest-card.leaving .stamp { animation: stamp .4s cubic-bezier(.2, 1.5, .4, 1) forwards; }
   @keyframes stamp {
     from { opacity: 0; transform: translate(-50%, -50%) rotate(-12deg) scale(2.5); }
-    to { opacity: .95; transform: translate(-50%, -50%) rotate(-12deg) scale(1); }
+    to { opacity: .92; transform: translate(-50%, -50%) rotate(-12deg) scale(1); }
   }
 
   @media (max-width: 520px) {
-    body { font-size: 15px; }
+    body { font-size: 16px; }
+    .form { rotate: 0deg; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
-    li.contract-card.leaving .stamp { opacity: .95; }
+    li.quest-card.leaving .stamp { opacity: .92; }
   }
 </style>
 </head>
@@ -331,34 +311,34 @@
 
 <main>
   <header class="sign">
-    <h1>SYNDIKAT-KONTRAKTE</h1>
-    <p>SCHATTENNETZ INTERN // NUR FÜR AUTORISIERTE AGENTEN</p>
+    <h1>Abenteuer & Quest-Tafel</h1>
+    <p>Hilf deinen Mitspielern, erledige Aufträge und verdiene dir deine Belohnung!</p>
   </header>
 
-  <section class="dossier" id="form" aria-labelledby="new-title">
-    <h2 id="new-title">Neuen Kontrakt ausstellen</h2>
-    <p class="sub">Geben Sie die Parameter für die Zielperson ein.</p>
+  <section class="paper form" id="form" aria-labelledby="new-title">
+    <h2 id="new-title">Neue Quest aufgeben</h2>
+    <p class="sub">Trage dein Anliegen ein und biete eine Belohnung an.</p>
     
     <div class="rule-notice">
-      ⚠️ <strong>Protokoll-Hinweis:</strong> Der Auftraggeber haftet voll für das Honorar. Nach erfolgreicher Eliminierung durch einen Agenten muss das angegebene Diamant-Honorar persönlich und direkt an den Auftragnehmer übergeben werden!
+      📜 <strong>Quest-Ehrenkodex:</strong> Wer hier eine Quest ausschreibt, verpflichtet sich, die versprochenen Diamanten an den Helden auszuzahlen, der die Aufgabe erfolgreich meistert!
     </div>
 
     <div class="field">
-      <label for="issuer">Auftraggeber (Dein Minecraft-Name)</label>
-      <input type="text" id="issuer" maxlength="16" autocomplete="off" spellcheck="false" placeholder="z. B. Handler_47">
-      <div class="hint" id="issuerHint">Wer gibt diesen Auftrag aus? (3 bis 16 Zeichen)</div>
+      <label for="issuer">Dein Minecraft-Name ( Auftraggeber )</label>
+      <input type="text" id="issuer" maxlength="16" autocomplete="off" spellcheck="false" placeholder="z. B. KingBuilder">
+      <div class="hint" id="issuerHint">Wer stellt die Quest aus? (3 bis 16 Zeichen)</div>
     </div>
 
     <div class="field">
-      <label for="player">Zielperson (Minecraft-Name des Ziels)</label>
-      <input type="text" id="player" maxlength="16" autocomplete="off" spellcheck="false" placeholder="z. B. Target_Zero">
-      <div class="hint" id="nameHint">3 bis 16 Zeichen: Buchstaben, Zahlen, Unterstrich.</div>
+      <label for="questName">Titel der Aufgabe ( z. B. Eisen-Farm bauen )</label>
+      <input type="text" id="questName" maxlength="30" autocomplete="off" spellcheck="false" placeholder="z. B. Nether-Festung finden">
+      <div class="hint" id="nameHint">Maximal 30 Zeichen für den Auftrag.</div>
     </div>
     
     <div class="field">
-      <label for="amount">Honorar in Diamanten</label>
+      <label for="amount">Belohnung in Diamanten</label>
       <div class="amount-wrap">
-        <svg width="24" height="24" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><use href="#diamond"/></svg>
+        <svg width="28" height="28" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><use href="#diamond"/></svg>
         <input type="number" id="amount" min="1" max="2304" step="1" value="10" inputmode="numeric">
       </div>
       <div class="quick">
@@ -369,12 +349,12 @@
       </div>
       <div class="hint" id="amountHint"></div>
     </div>
-    <button type="button" class="primary" id="submit">Kontrakt freigeben</button>
+    <button type="button" class="primary" id="submit">Quest veröffentlichen</button>
   </section>
 
   <section aria-labelledby="list-title">
-    <h3 class="board-title" id="list-title">Aktive Zielpersonen</h3>
-    <p class="empty" id="empty">Keine aktiven Kontrakte im System.</p>
+    <h3 class="board-title" id="list-title">Offene Abenteuer & Quests</h3>
+    <p class="empty" id="empty">Das Schwarze Brett ist leer. Alle Quests wurden erfüllt!</p>
     <ul id="list"></ul>
   </section>
 </main>
@@ -398,14 +378,14 @@
 
 <script>
 (function () {
-  var STORAGE_KEY = "syndicate-contracts-v1";
+  var STORAGE_KEY = "mc-quests-board-v1";
   var NAME_RE = /^[A-Za-z0-9_]{3,16}$/;
   var MAX = 2304; 
   var EASE = "cubic-bezier(.22, 1, .36, 1)";
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   var issuerEl = document.getElementById("issuer");
-  var nameEl = document.getElementById("player");
+  var questEl = document.getElementById("questName");
   var amountEl = document.getElementById("amount");
   var issuerHint = document.getElementById("issuerHint");
   var nameHint = document.getElementById("nameHint");
@@ -415,7 +395,7 @@
   var formEl = document.getElementById("form");
   var submitBtn = document.getElementById("submit");
 
-  var contracts = load();
+  var quests = load();
   var nodes = {}; 
 
   /* ---------- Speicher ---------- */
@@ -427,7 +407,7 @@
     } catch (e) { return []; }
   }
   function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(contracts)); } catch (e) {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(quests)); } catch (e) {}
   }
 
   /* ---------- Hilfen ---------- */
@@ -442,20 +422,25 @@
     if (text !== undefined) e.textContent = text;
     return e;
   }
+  function hash(str) {
+    var h = 0;
+    for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
   function wiggle(target) {
     if (reduce) return;
     target.animate(
-      [{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }],
-      { duration: 350, easing: "ease-out" }
+      [{ translate: "0 0" }, { translate: "-7px 0" }, { translate: "6px 0" }, { translate: "-4px 0" }, { translate: "2px 0" }, { translate: "0 0" }],
+      { duration: 420, easing: "ease-out" }
     );
   }
 
-  /* ---------- Zählen ---------- */
+  /* ---------- Hochzählen ---------- */
   function countTo(n, to) {
     var from = n.shown;
     n.shown = to;
     if (reduce || from === to) { n.num.textContent = to; return; }
-    var t0 = performance.now(), dur = 700;
+    var t0 = performance.now(), dur = 800;
     (function step(t) {
       var k = Math.min(1, (t - t0) / dur);
       var e = 1 - Math.pow(1 - k, 3);
@@ -463,25 +448,29 @@
       if (k < 1) requestAnimationFrame(step);
     })(t0);
     if (from > 0) {
-      n.reward.animate([{ transform: "scale(1)" }, { transform: "scale(1.2)" }, { transform: "scale(1)" }], { duration: 400, easing: EASE });
+      n.reward.animate([{ scale: 1 }, { scale: 1.25 }, { scale: 1 }], { duration: 520, easing: EASE });
     }
   }
 
-  /* ---------- Karten bauen ---------- */
+  /* ---------- Quest-Zettel bauen ---------- */
   function build(b) {
-    var li = el("li", "contract-card");
+    var li = el("li", "paper quest-card");
+    var tilt = ((hash(b.title) % 7) - 3) * 0.55;
+    li.style.setProperty("--tilt", tilt + "deg");
+    li.style.setProperty("--sway", (6 + (hash(b.title) % 40) / 10) + "s");
+    li.style.animationDelay = "-" + ((hash(b.title) % 60) / 10) + "s";
 
-    var badge = el("div", "target-badge", "ZIEL-DOSSIER");
-    li.appendChild(badge);
+    li.appendChild(el("p", "quest-type", "QUEST"));
+    li.appendChild(el("div", "divider", "AUFTRAG & MISSION"));
 
-    var photo = el("div", "photo");
+    var photo = el("div", "avatar-box");
     var img = document.createElement("img");
-    img.alt = "Ziel: " + b.name;
-    // 3D Bust Render mit Fallback auf Minotar Helm
-    img.src = "https://crafthead.net/bust/" + encodeURIComponent(b.name) + "/128.png";
+    img.alt = "Auftraggeber " + b.issuer;
+    // 3D Bust Render des Auftraggebers mit Fallback auf Helm
+    img.src = "https://crafthead.net/bust/" + encodeURIComponent(b.issuer) + "/128.png";
     img.onerror = function () {
       if (!img.src.includes("minotar")) {
-        img.src = "https://minotar.net/helm/" + encodeURIComponent(b.name) + "/128.png";
+        img.src = "https://minotar.net/helm/" + encodeURIComponent(b.issuer) + "/128.png";
       } else {
         img.removeAttribute("src");
       }
@@ -489,15 +478,14 @@
     photo.appendChild(img);
     li.appendChild(photo);
 
-    li.appendChild(el("div", "name", b.name));
-    li.appendChild(el("div", "client-tag", "Auftraggeber: " + (b.issuer || "Unbekannt")));
-    li.appendChild(el("div", "status-line", "STATUS: AKTIV"));
-    li.appendChild(el("p", "label", "HONORAR"));
+    li.appendChild(el("div", "title", b.title));
+    li.appendChild(el("div", "issuer-tag", "Stellt: " + b.issuer));
+    li.appendChild(el("p", "label", "Belohnung"));
 
     var reward = el("div", "reward");
     var ns = "http://www.w3.org/2000/svg";
     var svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("width", "24"); svg.setAttribute("height", "24");
+    svg.setAttribute("width", "28"); svg.setAttribute("height", "28");
     svg.setAttribute("viewBox", "0 0 8 8");
     svg.setAttribute("shape-rendering", "crispEdges");
     svg.setAttribute("aria-hidden", "true");
@@ -513,15 +501,15 @@
     var st = el("div", "stacks", "");
     li.appendChild(st);
 
-    var btn = el("button", "", "Kontrakt erfüllen");
+    var btn = el("button", "", "Erledigen");
     btn.type = "button";
-    btn.setAttribute("aria-label", "Ziel " + b.name + " eliminieren und Kontrakt schließen");
-    btn.addEventListener("click", function () { removeContract(b.name, btn); });
+    btn.setAttribute("aria-label", "Quest " + b.title + " als erfüllt markieren und entfernen");
+    btn.addEventListener("click", function () { removeQuest(b.id, btn); });
     li.appendChild(btn);
 
-    li.appendChild(el("div", "stamp", "ELIMINIERT"));
+    li.appendChild(el("div", "stamp", "ERFÜLLT"));
 
-    return { li: li, num: num, stacks: st, reward: reward, shown: 0 };
+    return { li: li, num: num, stacks: st, reward: reward, shown: 0, tilt: tilt };
   }
 
   /* ---------- FLIP Animation ---------- */
@@ -538,10 +526,22 @@
       var dx = prev[k].left - r.left, dy = prev[k].top - r.top;
       if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
       nodes[k].li.animate(
-        [{ transform: "translate(" + dx + "px, " + dy + "px)" }, { transform: "translate(0, 0)" }],
-        { duration: 600, easing: EASE }
+        [{ translate: dx + "px " + dy + "px" }, { translate: "0 0" }],
+        { duration: 700, easing: EASE }
       );
     });
+  }
+
+  /* ---------- Einfliegen ---------- */
+  function enter(n, delay) {
+    if (reduce) return;
+    var t = n.tilt;
+    n.li.animate([
+      { opacity: 0, translate: "0 -110px", rotate: (t - 9) + "deg", offset: 0 },
+      { opacity: 1, translate: "0 8px", rotate: (t + 3.5) + "deg", offset: .5 },
+      { translate: "0 0", rotate: (t - 1.6) + "deg", offset: .75 },
+      { translate: "0 0", rotate: t + "deg", offset: 1 }
+    ], { duration: 1200, delay: delay || 0, easing: EASE, fill: "backwards" });
   }
 
   function updateEmpty() {
@@ -549,24 +549,24 @@
   }
 
   function render(initial) {
-    contracts.sort(function (a, b) { return b.diamonds - a.diamonds; });
+    quests.sort(function (a, b) { return b.diamonds - a.diamonds; });
     var prev = snapshot();
     var fresh = [];
 
-    contracts.forEach(function (b) {
-      if (!nodes[b.name]) {
-        nodes[b.name] = build(b);
-        fresh.push(b.name);
+    quests.forEach(function (b) {
+      if (!nodes[b.id]) {
+        nodes[b.id] = build(b);
+        fresh.push(b.id);
       }
     });
 
-    contracts.forEach(function (b, i) {
-      var li = nodes[b.name].li;
+    quests.forEach(function (b, i) {
+      var li = nodes[b.id].li;
       if (listEl.children[i] !== li) listEl.insertBefore(li, listEl.children[i] || null);
     });
 
-    contracts.forEach(function (b) {
-      var n = nodes[b.name];
+    quests.forEach(function (b) {
+      var n = nodes[b.id];
       countTo(n, b.diamonds);
       var s = stacks(b.diamonds);
       n.stacks.textContent = s ? "(" + s + ")" : "";
@@ -574,15 +574,18 @@
 
     updateEmpty();
     flip(prev);
+    fresh.forEach(function (id, i) {
+      enter(nodes[id], initial ? 950 + i * 130 : 0);
+    });
   }
 
-  /* ---------- Kontrakt abschließen ---------- */
-  function removeContract(name, btn) {
-    var n = nodes[name];
+  /* ---------- Quest erfüllen & entfernen ---------- */
+  function removeQuest(id, btn) {
+    var n = nodes[id];
     if (!n || n.leaving) return;
     n.leaving = true;
     btn.disabled = true;
-    contracts = contracts.filter(function (b) { return b.name !== name; });
+    quests = quests.filter(function (b) { return b.id !== id; });
     save();
     n.li.classList.add("leaving");
 
@@ -590,20 +593,20 @@
       var prev = snapshot();
       function done() {
         n.li.remove();
-        delete nodes[name];
+        delete nodes[id];
         updateEmpty();
-        flip(prev, name);
+        flip(prev, id);
       }
       if (reduce) { done(); return; }
       var a = n.li.animate([
-        { opacity: 1, transform: "translate(0, 0)", filter: "none" },
-        { opacity: 0, transform: "translate(0, 40px)", filter: "blur(4px) brightness(0.3)" }
-      ], { duration: 500, easing: "cubic-bezier(.5, 0, .75, 0)", fill: "forwards" });
+        { opacity: 1, translate: "0 0", filter: "none" },
+        { opacity: 0, translate: "0 60px", filter: "blur(4px) brightness(.3)" }
+      ], { duration: 600, easing: "cubic-bezier(.5, 0, .75, 0)", fill: "forwards" });
       a.onfinish = done;
-    }, reduce ? 0 : 750);
+    }, reduce ? 0 : 900);
   }
 
-  /* ---------- Formular Validierung ---------- */
+  /* ---------- Eingabe ---------- */
   function updateAmountHint() {
     var n = parseInt(amountEl.value, 10);
     amountHint.className = "hint";
@@ -614,50 +617,46 @@
 
   function submit() {
     var issuer = issuerEl.value.trim();
-    var name = nameEl.value.trim();
+    var title = questEl.value.trim();
     var n = parseInt(amountEl.value, 10);
     var ok = true;
 
     issuerHint.className = "hint";
     if (!NAME_RE.test(issuer)) {
       issuerHint.className = "hint error";
-      issuerHint.textContent = "Ungültig. Erlaubt sind 3 bis 16 Zeichen (Buchstaben, Zahlen, Unterstrich).";
+      issuerHint.textContent = "Ungültiger Name (3 bis 16 Zeichen: Buchstaben, Zahlen, Unterstrich).";
       wiggle(issuerEl);
       ok = false;
     }
 
     nameHint.className = "hint";
-    if (!NAME_RE.test(name)) {
+    if (title.length < 3 || title.length > 30) {
       nameHint.className = "hint error";
-      nameHint.textContent = "Ungültig. Erlaubt sind 3 bis 16 Zeichen (Buchstaben, Zahlen, Unterstrich).";
-      wiggle(nameEl);
+      nameHint.textContent = "Der Titel muss zwischen 3 und 30 Zeichen lang sein.";
+      wiggle(questEl);
       ok = false;
     }
 
     if (isNaN(n) || n < 1 || n > MAX) {
       amountHint.className = "hint error";
-      amountHint.textContent = "Gib eine gültige Anzahl zwischen 1 und " + MAX + " ein.";
+      amountHint.textContent = "Gib eine Zahl zwischen 1 und " + MAX + " ein.";
       wiggle(amountEl);
       ok = false;
     }
     if (!ok) return;
 
-    var existing = contracts.filter(function (b) { return b.name.toLowerCase() === name.toLowerCase(); })[0];
-    if (existing) {
-      existing.diamonds = Math.min(MAX * 10, existing.diamonds + n);
-      if (issuer) existing.issuer = issuer;
-    } else {
-      contracts.push({ name: name, diamonds: n, issuer: issuer });
-    }
+    var newId = issuer.toLowerCase() + "-" + title.toLowerCase().replace(/[^a-z0-9]/g, "") + "-" + Date.now();
+    quests.push({ id: newId, issuer: issuer, title: title, diamonds: n });
     save();
     render(false);
 
     if (!reduce) {
-      formEl.animate([{ transform: "translate(0, 0)" }, { transform: "translate(0, 4px)" }, { transform: "translate(0, 0)" }], { duration: 250, easing: EASE });
+      formEl.animate([{ translate: "0 0" }, { translate: "0 5px" }, { translate: "0 0" }], { duration: 320, easing: EASE });
+      submitBtn.animate([{ scale: 1 }, { scale: .96 }, { scale: 1 }], { duration: 320, easing: EASE });
     }
-    nameEl.value = "";
-    nameHint.textContent = "Ziel " + name + " dem System hinzugefügt.";
-    nameEl.focus();
+    questEl.value = "";
+    nameHint.textContent = "Quest erfolgreich veröffentlicht.";
+    questEl.focus();
   }
 
   document.querySelectorAll("[data-add]").forEach(function (b) {
@@ -669,10 +668,10 @@
   });
   amountEl.addEventListener("input", updateAmountHint);
   submitBtn.addEventListener("click", submit);
-  nameEl.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
+  questEl.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
   issuerEl.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
 
-  /* ---------- Umgebungslicht ---------- */
+  /* ---------- Laternenlicht ---------- */
   var light = document.getElementById("light");
   var tx = window.innerWidth / 2, ty = window.innerHeight * 0.35, cx = tx, cy = ty;
   window.addEventListener("pointermove", function (e) {
@@ -686,7 +685,7 @@
     (function loop(t) {
       cx += (tx - cx) * 0.08;
       cy += (ty - cy) * 0.08;
-      var r = 440 + 10 * Math.sin(t / 250);
+      var r = 430 + 12 * Math.sin(t / 230) + 8 * Math.sin(t / 97);
       light.style.setProperty("--mx", cx.toFixed(1) + "px");
       light.style.setProperty("--my", cy.toFixed(1) + "px");
       light.style.setProperty("--r", r.toFixed(1) + "px");
@@ -694,16 +693,16 @@
     })(performance.now());
   }
 
-  /* ---------- Staubpartikel ---------- */
+  /* ---------- Staub ---------- */
   if (!reduce) {
     var dust = document.getElementById("dust");
-    for (var i = 0; i < 22; i++) {
+    for (var i = 0; i < 26; i++) {
       var p = document.createElement("i");
       p.style.setProperty("--x", (Math.random() * 100) + "%");
-      p.style.setProperty("--s", (2 + Math.random() * 2) + "px");
-      p.style.setProperty("--d", (18 + Math.random() * 20) + "s");
+      p.style.setProperty("--s", (2 + Math.random() * 2.5) + "px");
+      p.style.setProperty("--d", (16 + Math.random() * 22) + "s");
       p.style.setProperty("--l", "-" + (Math.random() * 30) + "s");
-      p.style.setProperty("--dx", (Math.random() * 120 - 60) + "px");
+      p.style.setProperty("--dx", (Math.random() * 160 - 80) + "px");
       dust.appendChild(p);
     }
   }
