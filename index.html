@@ -1,715 +1,741 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Server Quest-Tafel // Abenteuer & Aufträge</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=MedievalSharp&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --wood-1: #1a0f07;
-    --wood-2: #110904;
-    --wood-line: #070301;
-    --paper: #b0955d;
-    --paper-dark: #8c713f;
-    --ink: #120803;
-    --accent: #2e6129; /* Dunkelgrün für Quests/Erfolg */
-    --gold: #c29b38;
-    --ease: cubic-bezier(.22, 1, .36, 1);
-    --head: "Cinzel", Georgia, serif;
-    --body: "MedievalSharp", cursive, monospace;
-  }
-  * { box-sizing: border-box; }
-  html { background: var(--wood-2); }
-  body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: var(--body);
-    font-size: 18px;
-    line-height: 1.4;
-    color: var(--ink);
-    padding: 36px 16px 80px;
-    overflow-x: hidden;
-    background:
-      /* Holzmuster-Rillen */
-      repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 5px),
-      /* Realistische Holzbohlen */
-      repeating-linear-gradient(90deg, 
-        #060201 0px, 
-        #0d0603 3px, 
-        #1c0f07 18px, 
-        #140a04 125px, 
-        #0a0402 137px, 
-        #060201 140px
-      ),
-      linear-gradient(180deg, var(--wood-1), var(--wood-2));
-  }
-  main { position: relative; z-index: 2; max-width: 940px; margin: 0 auto; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guild Hall Bounty Board — Minecraft</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;700;800&family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  /* Atmosphäre: Nebel, Staub, Laternenlicht */
-  .fog {
-    position: fixed; left: -20%; right: -20%; bottom: -10%; height: 45%;
-    pointer-events: none; z-index: 1;
-    background:
-      radial-gradient(ellipse at 20% 80%, rgba(150,140,120,.06), transparent 60%),
-      radial-gradient(ellipse at 70% 90%, rgba(150,140,120,.05), transparent 55%);
-    animation: fog 40s ease-in-out infinite alternate;
-  }
-  @keyframes fog { from { transform: translateX(-5%); } to { transform: translateX(5%); } }
+  <style>
+    :root {
+      --oak-darkest: #140c07;
+      --oak-dark: #23150c;
+      --oak-mid: #3a2314;
+      --oak-light: #52331e;
+      --brass: #d4a84f;
+      --brass-dark: #8c6623;
+      --parchment-light: #fcf6e8;
+      --parchment-mid: #f3e6cc;
+      --parchment-dark: #e2cfa8;
+      --ink-primary: #26170c;
+      --ink-secondary: #5c4028;
+      --crimson: #8f1d1d;
+      --diamond-cyan: #4deeea;
+      --diamond-deep: #18a4b8;
+    }
 
-  .dust { position: fixed; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
-  .dust i {
-    position: absolute; top: 100%; left: var(--x);
-    width: var(--s); height: var(--s); border-radius: 50%;
-    background: rgba(205,175,120,.4);
-    opacity: 0;
-    animation: drift var(--d) linear var(--l) infinite;
-  }
-  @keyframes drift {
-    0% { transform: translate(0, 0); opacity: 0; }
-    12% { opacity: .7; }
-    88% { opacity: .4; }
-    100% { transform: translate(var(--dx), -112vh); opacity: 0; }
-  }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-  #light {
-    position: fixed; inset: 0; pointer-events: none; z-index: 50;
-    background: radial-gradient(circle var(--r, 420px) at var(--mx, 50%) var(--my, 35%),
-      rgba(255,200,100,.06) 0%, rgba(0,0,0,0) 50%, rgba(2,1,0,.6) 100%);
-  }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--oak-darkest);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -5%, rgba(255, 166, 64, 0.18) 0%, rgba(180, 90, 20, 0.06) 45%, transparent 75%),
+        radial-gradient(circle at 15% 85%, rgba(77, 238, 234, 0.04) 0%, transparent 45%),
+        linear-gradient(180deg, #1b1009 0%, #100905 100%);
+      color: #f4e8d1;
+      overflow-x: hidden;
+    }
 
-  /* Titelschild */
-  .sign {
-    position: relative;
-    text-align: center;
-    background: linear-gradient(180deg, #241409, var(--wood-1));
-    border: 6px solid var(--wood-line);
-    outline: 3px solid var(--gold);
-    outline-offset: -12px;
-    padding: 26px 20px 22px;
-    margin: 0 auto 40px;
-    max-width: 680px;
-    box-shadow: 0 12px 0 rgba(0,0,0,.65);
-    transform-origin: 50% 0;
-    animation: signDrop 1.3s var(--ease) both;
-  }
-  @keyframes signDrop {
-    0% { opacity: 0; transform: translateY(-120px) rotate(-3deg); }
-    55% { opacity: 1; transform: translateY(8px) rotate(1.2deg); }
-    78% { transform: translateY(0) rotate(-.5deg); }
-    100% { transform: none; }
-  }
-  .sign h1 {
-    font-family: var(--head);
-    font-weight: 700;
-    font-size: clamp(28px, 7vw, 52px);
-    line-height: 1.1;
-    margin: 0 0 8px;
-    color: #e3cfa0;
-    text-shadow: 2px 2px 0 #000;
-  }
-  .sign p { margin: 0; color: #a88c55; font-size: 16px; }
+    #ambientCanvas, #burstCanvas {
+      position: fixed; inset: 0; width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    #ambientCanvas { z-index: 0; }
+    #burstCanvas { z-index: 60; }
 
-  /* Papierformular */
-  .paper {
-    position: relative;
-    background:
-      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.12), transparent 55%),
-      radial-gradient(ellipse at 100% 100%, rgba(50,20,5,.45), transparent 60%),
-      var(--paper);
-    border: 3px solid var(--ink);
-    box-shadow:
-      inset 0 0 45px rgba(40,16,3,.7),
-      inset 0 0 8px rgba(0,0,0,.75),
-      6px 8px 0 rgba(0,0,0,.7);
-    padding: 26px 22px 22px;
-  }
-  .paper::before, .paper::after {
-    content: "";
-    position: absolute;
-    top: 8px;
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #777, #0d0d0d);
-  }
-  .paper::before { left: 8px; }
-  .paper::after { right: 8px; }
+    .font-display { font-family: 'Cinzel Decorative', 'Cinzel', serif; }
+    .font-serif-title { font-family: 'Cinzel', serif; }
+    .font-mono-num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
 
-  .form {
-    max-width: 580px;
-    margin: 0 auto 52px;
-    rotate: -.5deg;
-    animation: rise 1s var(--ease) .55s both;
-  }
-  @keyframes rise { from { opacity: 0; translate: 0 40px; } to { opacity: 1; translate: 0 0; } }
-  .form h2 {
-    font-family: var(--head);
-    font-weight: 700;
-    font-size: 26px;
-    text-align: center;
-    margin: 0 0 4px;
-    color: var(--ink);
-  }
-  .form .sub { text-align: center; margin: 0 0 20px; border-bottom: 2px solid var(--ink); padding-bottom: 12px; font-size: 16px; }
+    .guild-board {
+      position: relative;
+      background:
+        repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0px, rgba(0,0,0,0.14) 2px, transparent 2px, transparent 64px),
+        linear-gradient(165deg, #3b2415 0%, #2a180d 50%, #211209 100%);
+      border: 3px solid #593822;
+      box-shadow: 0 30px 70px -15px rgba(0,0,0,0.85), 0 0 0 1px #140b06, inset 0 2px 1px rgba(255,214,153,0.14), inset 0 0 60px rgba(0,0,0,0.65);
+    }
 
-  .rule-notice {
-    font-size: 14px;
-    background: rgba(46, 97, 41, 0.12);
-    border-left: 3px solid var(--accent);
-    padding: 10px 12px;
-    margin-bottom: 18px;
-    color: var(--ink);
-    line-height: 1.4;
-  }
+    .board-inner-well {
+      background:
+        radial-gradient(circle at 50% 0%, rgba(255,190,110,0.06), transparent 70%),
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 2px, transparent 2px, transparent 48px),
+        linear-gradient(180deg, #1d110a 0%, #170d07 100%);
+      box-shadow: inset 0 6px 18px rgba(0,0,0,0.75), inset 0 -2px 4px rgba(255,220,175,0.06), 0 1px 0 rgba(255,215,160,0.08);
+      border: 1px solid #120904;
+    }
 
-  label { display: block; font-size: 15px; margin-bottom: 4px; font-family: var(--head); font-weight: 600; }
-  .field { margin-bottom: 18px; }
-  
-  input[type="text"], input[type="number"] {
-    width: 100%;
-    font: inherit;
-    font-size: 20px;
-    color: var(--ink);
-    background: rgba(0,0,0,.12);
-    border: 2px solid var(--ink);
-    border-radius: 0;
-    padding: 8px 12px;
-    transition: background .3s var(--ease), box-shadow .3s var(--ease);
-  }
-  input:hover { background: rgba(0,0,0,.18); }
-  input:focus { background: rgba(0,0,0,.24); box-shadow: 0 0 0 3px rgba(46,97,41,.4); outline: none; }
-  input::placeholder { color: rgba(18,8,3,.4); }
-  
-  button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-  .hint { font-size: 13px; margin-top: 4px; min-height: 1.4em; transition: color .3s; }
-  .hint.error { color: #8a1c1c; font-weight: bold; }
+    .iron-bracket {
+      position: absolute; width: 26px; height: 26px;
+      background: linear-gradient(135deg, #4b4e54 0%, #26282c 60%, #18191c 100%);
+      border: 1px solid #63676e;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.25);
+      z-index: 10; pointer-events: none;
+    }
+    .iron-bracket::after {
+      content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #9ca3af, #374151);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.8); top: 50%; left: 50%; transform: translate(-50%,-50%);
+    }
+    .bracket-tl { top: -4px; left: -4px; border-radius: 8px 2px 6px 2px; }
+    .bracket-tr { top: -4px; right: -4px; border-radius: 2px 8px 2px 6px; }
+    .bracket-bl { bottom: -4px; left: -4px; border-radius: 2px 6px 2px 8px; }
+    .bracket-br { bottom: -4px; right: -4px; border-radius: 6px 2px 8px 2px; }
 
-  .amount-wrap { position: relative; }
-  .amount-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); }
-  .amount-wrap input { padding-left: 50px; }
-  .quick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .parchment-sheet {
+      background:
+        radial-gradient(circle at 85% 15%, rgba(212,168,79,0.14), transparent 45%),
+        radial-gradient(circle at 12% 90%, rgba(160,114,56,0.14), transparent 50%),
+        linear-gradient(165deg, var(--parchment-light) 0%, var(--parchment-mid) 58%, var(--parchment-dark) 100%);
+      color: var(--ink-primary);
+      border: 1px solid #cbb389;
+      box-shadow: 0 12px 28px -6px rgba(0,0,0,0.55), 0 4px 10px -2px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.85), inset 0 0 24px rgba(168,128,72,0.18);
+    }
 
-  button {
-    font-family: var(--body);
-    font-size: 16px;
-    color: var(--ink);
-    background: var(--paper-dark);
-    border: 2px solid var(--ink);
-    border-radius: 0;
-    padding: 7px 12px;
-    cursor: pointer;
-    box-shadow: 2px 3px 0 var(--ink);
-    transition: background .3s var(--ease), translate .18s var(--ease), box-shadow .18s var(--ease);
-  }
-  button:hover { background: #73582e; color: #f5e6c8; }
-  button:active { translate: 2px 3px; box-shadow: 0 0 0 var(--ink); }
-  button:disabled { cursor: default; opacity: .6; }
-  
-  button.primary {
-    width: 100%;
-    font-family: var(--head);
-    font-weight: 700;
-    font-size: 20px;
-    color: #e3cfa0;
-    background: var(--accent);
-    border: 2px solid var(--ink);
-    padding: 12px;
-    box-shadow: 3px 4px 0 var(--ink);
-  }
-  button.primary:hover { background: #234d1f; box-shadow: 3px 4px 0 var(--ink), 0 0 20px rgba(46,97,41,.4); }
+    .bounty-card { position: relative; transform-style: preserve-3d; will-change: transform, opacity; transition: box-shadow 0.28s cubic-bezier(0.22,1,0.36,1); cursor: default; }
+    .bounty-card-inner {
+      position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between;
+      border-radius: 10px; padding: 22px 18px 16px;
+      background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.65), transparent 60%), linear-gradient(168deg, #fdf8ee 0%, #f4e7ce 55%, #e5d2ae 100%);
+      border: 1px solid #c9b084;
+      box-shadow: 0 10px 22px -6px rgba(0,0,0,0.6), 0 2px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 0 20px rgba(158,118,64,0.16);
+      overflow: hidden; transition: border-color 0.25s ease, box-shadow 0.28s ease;
+    }
+    .bounty-card:hover .bounty-card-inner {
+      border-color: #b5893e;
+      box-shadow: 0 22px 38px -10px rgba(0,0,0,0.78), 0 0 22px rgba(212,168,79,0.18), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 0 22px rgba(158,118,64,0.2);
+    }
 
-  h3.board-title {
-    font-family: var(--head);
-    font-weight: 700;
-    font-size: 28px;
-    color: #c4aa72;
-    text-shadow: 2px 2px 0 var(--wood-line);
-    margin: 0 0 24px;
-    text-align: center;
-  }
-  .empty { text-align: center; color: #8c713f; margin: 0; }
+    .card-sheen {
+      position: absolute; inset: 0; pointer-events: none; border-radius: 10px; opacity: 0; transition: opacity 0.25s ease;
+      background: radial-gradient(circle 180px at var(--mx,50%) var(--my,30%), rgba(255,252,240,0.48), transparent 75%);
+      z-index: 4;
+    }
+    .bounty-card:hover .card-sheen { opacity: 1; }
 
-  /* Quest-Zettel */
-  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 34px 26px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
-  li.quest-card {
-    --tilt: 0deg;
-    rotate: var(--tilt);
-    transform-origin: 50% 10px;
-    padding: 34px 16px 16px;
-    text-align: center;
-    animation: sway var(--sway, 8s) ease-in-out infinite;
-    transition: scale .5s var(--ease), box-shadow .5s var(--ease);
-  }
-  @keyframes sway {
-    0%, 100% { rotate: var(--tilt); }
-    50% { rotate: calc(var(--tilt) + .9deg); }
-  }
-  li.quest-card:hover {
-    scale: 1.04;
-    z-index: 5;
-    box-shadow:
-      inset 0 0 45px rgba(40,16,3,.7), inset 0 0 8px rgba(0,0,0,.75),
-      10px 16px 0 rgba(0,0,0,.6), 0 0 34px rgba(46,97,41,.2);
-  }
-  li.quest-card::before {
-    left: 50%; top: 9px; translate: -50% 0;
-    width: 12px; height: 12px;
-  }
-  li.quest-card::after { display: none; }
-  li.quest-card.leaving { pointer-events: none; }
+    .paper-lines { background-image: repeating-linear-gradient(transparent, transparent 21px, rgba(139,98,52,0.08) 22px); }
 
-  .quest-card .quest-type { font-family: var(--head); font-weight: 700; font-size: 26px; line-height: 1.1; color: var(--accent); margin: 0; }
-  .quest-card .divider { font-size: 13px; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); margin: 8px 0 12px; padding: 2px 0; font-family: var(--head); }
-  
-  .avatar-box { position: relative; width: 110px; height: 110px; margin: 0 auto 10px; border: 3px solid var(--ink); background: #3d2c18; overflow: hidden; }
-  .avatar-box img { width: 100%; height: 100%; display: block; object-fit: cover; filter: sepia(.7) contrast(1.1) brightness(.9); transition: filter .6s var(--ease); }
-  li.quest-card:hover .avatar-box img { filter: sepia(.3) contrast(1.15) brightness(1); }
-  .avatar-box::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 20px rgba(0,0,0,.7); pointer-events: none; }
+    .brass-tack {
+      position: absolute; top: -9px; left: 50%; transform: translateX(-50%); width: 20px; height: 20px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #fff0b8 0%, #e0b252 45%, #8a5e18 90%, #4d3208 100%);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.8);
+      z-index: 15; pointer-events: none;
+    }
+    .brass-tack::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; border: 1px solid rgba(92,60,12,0.35); }
 
-  .quest-card .title { font-family: var(--head); font-weight: 700; font-size: 20px; word-break: break-word; margin-bottom: 4px; }
-  .quest-card .issuer-tag { font-size: 13px; color: var(--paper-dark); font-style: italic; margin-bottom: 8px; word-break: break-all; }
-  .quest-card .label { font-size: 13px; margin: 0; }
-  
-  .quest-card .reward { display: flex; justify-content: center; align-items: center; gap: 8px; font-family: var(--head); font-weight: 700; font-size: 26px; color: var(--accent); }
-  .quest-card .stacks { font-size: 13px; min-height: 1.2em; margin-bottom: 12px; }
-  .quest-card button { width: 100%; }
+    @keyframes posterSlap {
+      0% { opacity: 0; transform: scale(1.22) translateY(-28px) rotate(-4deg); filter: brightness(1.15); }
+      55% { opacity: 1; transform: scale(0.97) translateY(3px) rotate(1.2deg); filter: brightness(1); }
+      78% { transform: scale(1.015) translateY(-1px) rotate(-0.5deg); }
+      100% { opacity: 1; transform: scale(1) translateY(0) rotate(var(--base-rot, 0deg)); }
+    }
+    .animate-poster-slap { animation: posterSlap 0.58s cubic-bezier(0.22,1,0.36,1) forwards; }
 
-  /* Erledigt-Stempel */
-  .stamp {
-    position: absolute; left: 50%; top: 46%;
-    font-family: var(--head); font-weight: 700; font-size: 30px; letter-spacing: 2px;
-    color: var(--accent);
-    border: 5px solid var(--accent);
-    padding: 4px 14px;
-    opacity: 0;
-    transform: translate(-50%, -50%) rotate(-12deg);
-    mix-blend-mode: multiply;
-    pointer-events: none;
-  }
-  li.quest-card.leaving .stamp { animation: stamp .4s cubic-bezier(.2, 1.5, .4, 1) forwards; }
-  @keyframes stamp {
-    from { opacity: 0; transform: translate(-50%, -50%) rotate(-12deg) scale(2.5); }
-    to { opacity: .92; transform: translate(-50%, -50%) rotate(-12deg) scale(1); }
-  }
+    @keyframes posterTear {
+      0% { opacity: 1; transform: scale(1) rotate(var(--base-rot, 0deg)); }
+      30% { opacity: 1; transform: scale(1.04) translateY(-6px) rotate(-2deg); }
+      100% { opacity: 0; transform: scale(0.82) translateY(36px) rotate(9deg); filter: blur(2px); }
+    }
+    .animate-poster-tear { animation: posterTear 0.42s cubic-bezier(0.4,0,0.2,1) forwards; pointer-events: none; }
 
-  @media (max-width: 520px) {
-    body { font-size: 16px; }
-    .form { rotate: 0deg; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation: none !important; transition: none !important; }
-    li.quest-card.leaving .stamp { opacity: .92; }
-  }
-</style>
+    .mc-diamond-badge {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #1b120b 0%, #2b1c11 100%);
+      border: 1px solid rgba(77,238,234,0.32);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 3px 8px rgba(0,0,0,0.35);
+    }
+    .mc-diamond-badge::after {
+      content: ''; position: absolute; top: 0; left: -120%; width: 70%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(126,249,245,0.22), transparent);
+      transform: skewX(-22deg); animation: diamondSweep 4.5s ease-in-out infinite;
+    }
+    @keyframes diamondSweep { 0%,65% { left: -120%; } 100% { left: 160%; } }
+
+    .mc-avatar-frame {
+      image-rendering: pixelated; background: #2c1d11; border: 2px solid #8c6a3e;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,240,200,0.35);
+    }
+
+    .btn-emerald {
+      background: linear-gradient(180deg, #569e34 0%, #3d7a22 55%, #2f6119 100%);
+      border: 1px solid #76c44e; color: #f4fce8; text-shadow: 0 1px 2px rgba(0,0,0,0.55);
+      box-shadow: 0 4px 0 #1e400f, 0 8px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.32);
+      transition: transform 0.14s cubic-bezier(0.22,1,0.36,1), box-shadow 0.14s ease, filter 0.15s ease;
+    }
+    .btn-emerald:hover { filter: brightness(1.07); transform: translateY(-1px); box-shadow: 0 5px 0 #1e400f, 0 12px 22px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.4); }
+    .btn-emerald:active { transform: translateY(2px); box-shadow: 0 2px 0 #1e400f, 0 4px 10px rgba(0,0,0,0.35); }
+
+    ::-webkit-scrollbar { width: 9px; height: 9px; }
+    ::-webkit-scrollbar-track { background: #140c07; }
+    ::-webkit-scrollbar-thumb { background: #4a2e1b; border-radius: 999px; border: 2px solid #140c07; }
+    ::-webkit-scrollbar-thumb:hover { background: #6b4328; }
+
+    .parchment-input {
+      background: rgba(255,253,247,0.92); border: 1.5px solid #bfa477; color: #241509;
+      transition: all 0.2s cubic-bezier(0.22,1,0.36,1); box-shadow: inset 0 2px 4px rgba(82,54,24,0.08);
+    }
+    .parchment-input:focus {
+      outline: none; background: #ffffff; border-color: #8f6329;
+      box-shadow: 0 0 0 3px rgba(212,168,79,0.28), inset 0 1px 2px rgba(82,54,24,0.05);
+    }
+
+    @keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .toast-enter { animation: toastIn 0.32s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+    .loading-overlay {
+      position: absolute; inset: 0; background: rgba(20,12,7,0.7); display: flex; align-items: center; justify-content: center;
+      z-index: 30; border-radius: 12px; backdrop-filter: blur(4px);
+    }
+  </style>
 </head>
-<body>
-<div class="fog" aria-hidden="true"></div>
-<div class="dust" id="dust" aria-hidden="true"></div>
-<div id="light" aria-hidden="true"></div>
+<body class="py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
 
-<main>
-  <header class="sign">
-    <h1>Abenteuer & Quest-Tafel</h1>
-    <p>Hilf deinen Mitspielern, erledige Aufträge und verdiene dir deine Belohnung!</p>
+  <canvas id="ambientCanvas"></canvas>
+  <canvas id="burstCanvas"></canvas>
+
+  <!-- Header -->
+  <header class="relative z-10 text-center max-w-3xl mx-auto mb-7">
+    <div class="inline-flex items-center gap-2.5 px-3.5 py-1 rounded-full bg-amber-950/70 border border-amber-500/30 text-amber-300/90 text-xs font-semibold tracking-widest uppercase mb-3 shadow-lg backdrop-blur-sm">
+      <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+      Overworld Hunters' Guild
+    </div>
+
+    <h1 class="font-display text-3xl sm:text-5xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-[#fff3cf] via-[#e8c678] to-[#b58736] drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)] flex items-center justify-center gap-3 sm:gap-4">
+      <svg class="w-7 h-7 sm:w-9 sm:h-9 text-amber-400 shrink-0 drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline>
+        <line x1="13" y1="19" x2="19" y2="13"></line>
+        <line x1="16" y1="16" x2="20" y2="20"></line>
+        <line x1="19" y1="21" x2="21" y2="19"></line>
+      </svg>
+      <span>Bounty Board</span>
+      <svg class="w-7 h-7 sm:w-9 sm:h-9 text-amber-400 shrink-0 drop-shadow scale-x-[-1]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline>
+        <line x1="13" y1="19" x2="19" y2="13"></line>
+        <line x1="16" y1="16" x2="20" y2="20"></line>
+        <line x1="19" y1="21" x2="21" y2="19"></line>
+      </svg>
+    </h1>
+
+    <p class="mt-2 text-sm sm:text-base text-amber-200/75 font-medium tracking-wide">
+      Wanted — Dead or Alive <span class="text-cyan-300/90 font-semibold">(paid strictly in uncut diamonds)</span>
+    </p>
   </header>
 
-  <section class="paper form" id="form" aria-labelledby="new-title">
-    <h2 id="new-title">Neue Quest aufgeben</h2>
-    <p class="sub">Trage dein Anliegen ein und biete eine Belohnung an.</p>
-    
-    <div class="rule-notice">
-      📜 <strong>Quest-Ehrenkodex:</strong> Wer hier eine Quest ausschreibt, verpflichtet sich, die versprochenen Diamanten an den Helden auszuzahlen, der die Aufgabe erfolgreich meistert!
-    </div>
+  <!-- Main Board -->
+  <main class="guild-board relative z-10 w-full max-w-5xl rounded-2xl p-4 sm:p-7 lg:p-8">
+    <div class="iron-bracket bracket-tl"></div>
+    <div class="iron-bracket bracket-tr"></div>
+    <div class="iron-bracket bracket-bl"></div>
+    <div class="iron-bracket bracket-br"></div>
 
-    <div class="field">
-      <label for="issuer">Dein Minecraft-Name ( Auftraggeber )</label>
-      <input type="text" id="issuer" maxlength="16" autocomplete="off" spellcheck="false" placeholder="z. B. KingBuilder">
-      <div class="hint" id="issuerHint">Wer stellt die Quest aus? (3 bis 16 Zeichen)</div>
-    </div>
-
-    <div class="field">
-      <label for="questName">Titel der Aufgabe ( z. B. Eisen-Farm bauen )</label>
-      <input type="text" id="questName" maxlength="30" autocomplete="off" spellcheck="false" placeholder="z. B. Nether-Festung finden">
-      <div class="hint" id="nameHint">Maximal 30 Zeichen für den Auftrag.</div>
-    </div>
-    
-    <div class="field">
-      <label for="amount">Belohnung in Diamanten</label>
-      <div class="amount-wrap">
-        <svg width="28" height="28" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><use href="#diamond"/></svg>
-        <input type="number" id="amount" min="1" max="2304" step="1" value="10" inputmode="numeric">
+    <!-- Stats -->
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+      <div class="flex items-center justify-between sm:justify-start gap-3.5 px-4 py-3 rounded-xl bg-black/35 border border-amber-500/15 shadow-inner">
+        <div class="w-10 h-10 rounded-lg bg-amber-900/50 border border-amber-500/30 flex items-center justify-center text-amber-300 shrink-0">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        </div>
+        <div>
+          <div class="text-[11px] uppercase tracking-wider text-amber-200/60 font-semibold">Active Contracts</div>
+          <div id="statCount" class="font-mono-num text-xl font-bold text-amber-100">0</div>
+        </div>
       </div>
-      <div class="quick">
-        <button type="button" data-add="1">+1</button>
-        <button type="button" data-add="5">+5</button>
-        <button type="button" data-add="16">+16</button>
-        <button type="button" data-add="64">+64 (1 Stack)</button>
+
+      <div class="flex items-center justify-between sm:justify-start gap-3.5 px-4 py-3 rounded-xl bg-black/35 border border-cyan-400/20 shadow-inner">
+        <div class="w-10 h-10 rounded-lg bg-cyan-950/60 border border-cyan-400/30 flex items-center justify-center shrink-0">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none"><polygon points="12 2 21 9 12 22 3 9" fill="#22d3ee"/><polygon points="12 2 21 9 12 11" fill="#a5f3fc"/><polygon points="12 2 3 9 12 11" fill="#67e8f9"/><polygon points="12 11 21 9 12 22" fill="#0891b2"/></svg>
+        </div>
+        <div class="min-w-0">
+          <div class="text-[11px] uppercase tracking-wider text-cyan-200/65 font-semibold">Total Diamond Pool</div>
+          <div id="statPool" class="font-mono-num text-lg sm:text-xl font-bold text-cyan-300 truncate">0 ♦</div>
+        </div>
       </div>
-      <div class="hint" id="amountHint"></div>
+
+      <div class="flex items-center justify-between sm:justify-start gap-3.5 px-4 py-3 rounded-xl bg-black/35 border border-rose-500/20 shadow-inner">
+        <div class="w-10 h-10 rounded-lg bg-rose-950/60 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        </div>
+        <div>
+          <div class="text-[11px] uppercase tracking-wider text-rose-200/65 font-semibold">Status</div>
+          <div id="syncStatus" class="text-sm font-semibold text-rose-200">Connecting...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Form -->
+    <div class="parchment-sheet rounded-xl p-5 sm:p-6 mb-7 relative">
+      <div class="brass-tack"></div>
+      <form id="bountyForm" class="space-y-4" onsubmit="handleFormSubmit(event)">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-[#5c4028] uppercase tracking-wider mb-1.5">Target Name</label>
+            <div class="flex gap-2">
+              <input type="text" id="name" maxlength="24" placeholder="Steve" class="parchment-input flex-1 rounded-lg px-3 py-2.5 text-sm font-medium" required>
+              <img id="previewHead" src="https://mc-heads.net/avatar/Steve/40" class="mc-avatar-frame w-10 h-10 rounded-lg object-cover shrink-0" alt="">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#5c4028] uppercase tracking-wider mb-1.5">Bounty (Diamonds)</label>
+            <div class="relative">
+              <input type="number" id="amount" min="1" max="999999" placeholder="64" class="parchment-input w-full rounded-lg px-3 py-2.5 text-sm font-medium" required>
+              <span id="stackHelper" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8a6a40] font-mono-num"></span>
+            </div>
+            <div class="flex gap-1.5 mt-2 flex-wrap">
+              <button type="button" onclick="setQuickAmount(16)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-semibold">16</button>
+              <button type="button" onclick="setQuickAmount(64)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-semibold">64</button>
+              <button type="button" onclick="setQuickAmount(128)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-semibold">128</button>
+              <button type="button" onclick="setQuickAmount(256)" class="px-2 py-0.5 text-[11px] rounded bg-[#e8d9b8] hover:bg-[#dcc9a0] text-[#5c4028] font-semibold">256</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-[#5c4028] uppercase tracking-wider mb-1.5">Reason (optional)</label>
+          <input type="text" id="reason" maxlength="80" placeholder="Griefing the wheat farm..." class="parchment-input w-full rounded-lg px-3 py-2.5 text-sm">
+        </div>
+        <div class="flex flex-wrap gap-3 pt-1">
+          <button type="submit" class="btn-emerald px-6 py-2.5 rounded-lg text-sm font-bold tracking-wide">Post Bounty</button>
+          <button type="button" onclick="loadSampleBounties()" class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#3a2a1a] text-amber-200/80 border border-amber-700/40 hover:bg-[#4a3520] transition">Load Sample Targets</button>
+        </div>
+      </form>
     </div>
-    <button type="button" class="primary" id="submit">Quest veröffentlichen</button>
-  </section>
 
-  <section aria-labelledby="list-title">
-    <h3 class="board-title" id="list-title">Offene Abenteuer & Quests</h3>
-    <p class="empty" id="empty">Das Schwarze Brett ist leer. Alle Quests wurden erfüllt!</p>
-    <ul id="list"></ul>
-  </section>
-</main>
+    <!-- Bounty List -->
+    <div class="board-inner-well rounded-xl p-4 sm:p-5 min-h-[280px] relative">
+      <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="text-amber-200/90 text-sm font-semibold flex items-center gap-2">
+          <svg class="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="30 70"></circle></svg>
+          Syncing with Guild Hall...
+        </div>
+      </div>
+      <div id="bountyList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    </div>
+  </main>
 
-<!-- Pixel-Diamant SVG Referenz -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <g id="diamond">
-      <rect x="2" y="0" width="4" height="1" fill="#b6fff6"/>
-      <rect x="1" y="1" width="6" height="1" fill="#4aedd9"/>
-      <rect x="0" y="2" width="8" height="1" fill="#4aedd9"/>
-      <rect x="0" y="3" width="8" height="1" fill="#2fc9b8"/>
-      <rect x="1" y="4" width="6" height="1" fill="#2fc9b8"/>
-      <rect x="2" y="5" width="4" height="1" fill="#1b9e91"/>
-      <rect x="3" y="6" width="2" height="1" fill="#1b9e91"/>
-      <rect x="2" y="1" width="2" height="1" fill="#b6fff6"/>
-      <rect x="1" y="2" width="1" height="1" fill="#b6fff6"/>
-    </g>
-  </defs>
-</svg>
+  <p class="mt-8 text-center text-xs text-amber-200/40 relative z-10">
+    All bounties paid in Minecraft diamonds · Shared Guild Board (Firebase)
+  </p>
 
-<script>
-(function () {
-  var STORAGE_KEY = "mc-quests-board-v1";
-  var NAME_RE = /^[A-Za-z0-9_]{3,16}$/;
-  var MAX = 2304; 
-  var EASE = "cubic-bezier(.22, 1, .36, 1)";
-  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  <!-- Modal -->
+  <div id="actionModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 transition-opacity duration-200">
+    <div id="actionModalCard" class="parchment-sheet max-w-sm w-full rounded-2xl p-6 scale-95 transition-transform duration-200">
+      <div class="text-center mb-5">
+        <img id="modalAvatar" src="" class="mc-avatar-frame w-16 h-16 rounded-xl mx-auto mb-3 object-cover" alt="">
+        <h3 id="modalTargetName" class="font-serif-title text-xl font-bold text-[#261409]"></h3>
+        <p id="modalRewardText" class="text-sm text-[#5c4028] mt-1"></p>
+      </div>
+      <div class="flex flex-col gap-2.5">
+        <button id="confirmClaimBtn" class="btn-emerald w-full py-2.5 rounded-lg text-sm font-bold">Claim Bounty (Collect Diamonds)</button>
+        <button id="confirmRemoveBtn" class="w-full py-2.5 rounded-lg text-sm font-semibold bg-red-900/15 text-red-900 border border-red-900/30 hover:bg-red-900/25 transition">Tear Down Notice</button>
+        <button onclick="closeModal()" class="w-full py-2 text-sm text-[#5c4028]/70 hover:text-[#5c4028] transition">Cancel</button>
+      </div>
+    </div>
+  </div>
 
-  var issuerEl = document.getElementById("issuer");
-  var questEl = document.getElementById("questName");
-  var amountEl = document.getElementById("amount");
-  var issuerHint = document.getElementById("issuerHint");
-  var nameHint = document.getElementById("nameHint");
-  var amountHint = document.getElementById("amountHint");
-  var listEl = document.getElementById("list");
-  var emptyEl = document.getElementById("empty");
-  var formEl = document.getElementById("form");
-  var submitBtn = document.getElementById("submit");
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-xs"></div>
 
-  var quests = load();
-  var nodes = {}; 
-
-  /* ---------- Speicher ---------- */
-  function load() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      var data = raw ? JSON.parse(raw) : [];
-      return Array.isArray(data) ? data : [];
-    } catch (e) { return []; }
-  }
-  function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(quests)); } catch (e) {}
-  }
-
-  /* ---------- Hilfen ---------- */
-  function stacks(n) {
-    var s = Math.floor(n / 64), r = n % 64;
-    if (s === 0) return "";
-    return s + (s === 1 ? " Stack" : " Stacks") + (r ? " + " + r : "");
-  }
-  function el(tag, cls, text) {
-    var e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text !== undefined) e.textContent = text;
-    return e;
-  }
-  function hash(str) {
-    var h = 0;
-    for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
-    return Math.abs(h);
-  }
-  function wiggle(target) {
-    if (reduce) return;
-    target.animate(
-      [{ translate: "0 0" }, { translate: "-7px 0" }, { translate: "6px 0" }, { translate: "-4px 0" }, { translate: "2px 0" }, { translate: "0 0" }],
-      { duration: 420, easing: "ease-out" }
-    );
-  }
-
-  /* ---------- Hochzählen ---------- */
-  function countTo(n, to) {
-    var from = n.shown;
-    n.shown = to;
-    if (reduce || from === to) { n.num.textContent = to; return; }
-    var t0 = performance.now(), dur = 800;
-    (function step(t) {
-      var k = Math.min(1, (t - t0) / dur);
-      var e = 1 - Math.pow(1 - k, 3);
-      n.num.textContent = Math.round(from + (to - from) * e);
-      if (k < 1) requestAnimationFrame(step);
-    })(t0);
-    if (from > 0) {
-      n.reward.animate([{ scale: 1 }, { scale: 1.25 }, { scale: 1 }], { duration: 520, easing: EASE });
-    }
-  }
-
-  /* ---------- Quest-Zettel bauen ---------- */
-  function build(b) {
-    var li = el("li", "paper quest-card");
-    var tilt = ((hash(b.title) % 7) - 3) * 0.55;
-    li.style.setProperty("--tilt", tilt + "deg");
-    li.style.setProperty("--sway", (6 + (hash(b.title) % 40) / 10) + "s");
-    li.style.animationDelay = "-" + ((hash(b.title) % 60) / 10) + "s";
-
-    li.appendChild(el("p", "quest-type", "QUEST"));
-    li.appendChild(el("div", "divider", "AUFTRAG & MISSION"));
-
-    var photo = el("div", "avatar-box");
-    var img = document.createElement("img");
-    img.alt = "Auftraggeber " + b.issuer;
-    // 3D Bust Render des Auftraggebers mit Fallback auf Helm
-    img.src = "https://crafthead.net/bust/" + encodeURIComponent(b.issuer) + "/128.png";
-    img.onerror = function () {
-      if (!img.src.includes("minotar")) {
-        img.src = "https://minotar.net/helm/" + encodeURIComponent(b.issuer) + "/128.png";
-      } else {
-        img.removeAttribute("src");
-      }
+  <script>
+    // ====================== FIREBASE ======================
+    const firebaseConfig = {
+      apiKey: "AIzaSyCuIfJ9ON8opfjcSzGG_Dg9sNFbLFK4nNU",
+      authDomain: "mcbounty.firebaseapp.com",
+      databaseURL: "https://mcbounty-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "mcbounty",
+      storageBucket: "mcbounty.firebasestorage.app",
+      messagingSenderId: "414418458359",
+      appId: "1:414418458359:web:320059666010becbca25f2",
+      measurementId: "G-NMJCQWL5XB"
     };
-    photo.appendChild(img);
-    li.appendChild(photo);
 
-    li.appendChild(el("div", "title", b.title));
-    li.appendChild(el("div", "issuer-tag", "Stellt: " + b.issuer));
-    li.appendChild(el("p", "label", "Belohnung"));
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const bountiesRef = db.ref('bounties');
 
-    var reward = el("div", "reward");
-    var ns = "http://www.w3.org/2000/svg";
-    var svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("width", "28"); svg.setAttribute("height", "28");
-    svg.setAttribute("viewBox", "0 0 8 8");
-    svg.setAttribute("shape-rendering", "crispEdges");
-    svg.setAttribute("aria-hidden", "true");
-    var use = document.createElementNS(ns, "use");
-    use.setAttribute("href", "#diamond");
-    svg.appendChild(use);
-    reward.appendChild(svg);
+    let bounties = [];
+    let newlyAddedId = null;
+    let pendingModalId = null;
 
-    var num = el("span", "", "0");
-    reward.appendChild(num);
-    li.appendChild(reward);
+    const FALLBACK_AVATAR = 'https://mc-heads.net/avatar/Steve/64';
 
-    var st = el("div", "stacks", "");
-    li.appendChild(st);
+    // Live listener – everyone sees changes instantly
+    bountiesRef.on('value', (snapshot) => {
+      const data = snapshot.val() || {};
+      bounties = Object.keys(data).map(key => ({
+        id: key,
+        ...data[key]
+      })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-    var btn = el("button", "", "Erledigen");
-    btn.type = "button";
-    btn.setAttribute("aria-label", "Quest " + b.title + " als erfüllt markieren und entfernen");
-    btn.addEventListener("click", function () { removeQuest(b.id, btn); });
-    li.appendChild(btn);
-
-    li.appendChild(el("div", "stamp", "ERFÜLLT"));
-
-    return { li: li, num: num, stacks: st, reward: reward, shown: 0, tilt: tilt };
-  }
-
-  /* ---------- FLIP Animation ---------- */
-  function snapshot() {
-    var s = {};
-    Object.keys(nodes).forEach(function (k) { s[k] = nodes[k].li.getBoundingClientRect(); });
-    return s;
-  }
-  function flip(prev, skip) {
-    if (reduce) return;
-    Object.keys(nodes).forEach(function (k) {
-      if (k === skip || !prev[k]) return;
-      var r = nodes[k].li.getBoundingClientRect();
-      var dx = prev[k].left - r.left, dy = prev[k].top - r.top;
-      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
-      nodes[k].li.animate(
-        [{ translate: dx + "px " + dy + "px" }, { translate: "0 0" }],
-        { duration: 700, easing: EASE }
-      );
+      document.getElementById('syncStatus').textContent = 'Live';
+      renderBoard(false);
+    }, (error) => {
+      console.error(error);
+      document.getElementById('syncStatus').textContent = 'Error';
+      showToast('Connection to Guild Hall failed', 'warning');
     });
-  }
 
-  /* ---------- Einfliegen ---------- */
-  function enter(n, delay) {
-    if (reduce) return;
-    var t = n.tilt;
-    n.li.animate([
-      { opacity: 0, translate: "0 -110px", rotate: (t - 9) + "deg", offset: 0 },
-      { opacity: 1, translate: "0 8px", rotate: (t + 3.5) + "deg", offset: .5 },
-      { translate: "0 0", rotate: (t - 1.6) + "deg", offset: .75 },
-      { translate: "0 0", rotate: t + "deg", offset: 1 }
-    ], { duration: 1200, delay: delay || 0, easing: EASE, fill: "backwards" });
-  }
+    // ---------- Rest of the logic ----------
+    function formatStacks(amount) {
+      if (amount < 64) return '';
+      const stacks = Math.floor(amount / 64);
+      const leftover = amount % 64;
+      return leftover ? `${stacks}s + ${leftover}` : `${stacks} stacks`;
+    }
 
-  function updateEmpty() {
-    emptyEl.style.display = Object.keys(nodes).length ? "none" : "block";
-  }
+    function getTier(amount) {
+      if (amount >= 512) return { label: 'Legendary', sealColor: '#7c3aed' };
+      if (amount >= 256) return { label: 'Epic', sealColor: '#b45309' };
+      if (amount >= 128) return { label: 'Rare', sealColor: '#0369a1' };
+      if (amount >= 64) return { label: 'Uncommon', sealColor: '#15803d' };
+      return { label: 'Common', sealColor: '#6b7280' };
+    }
 
-  function render(initial) {
-    quests.sort(function (a, b) { return b.diamonds - a.diamonds; });
-    var prev = snapshot();
-    var fresh = [];
+    function renderBoard(useFlip = false) {
+      const list = document.getElementById('bountyList');
 
-    quests.forEach(function (b) {
-      if (!nodes[b.id]) {
-        nodes[b.id] = build(b);
-        fresh.push(b.id);
+      // Stats
+      document.getElementById('statCount').textContent = bounties.length;
+      const total = bounties.reduce((sum, b) => sum + (b.amount || 0), 0);
+      document.getElementById('statPool').textContent = total.toLocaleString() + ' ♦';
+
+      if (bounties.length === 0) {
+        list.innerHTML = `
+          <div class="col-span-full text-center py-16 text-amber-200/50">
+            <div class="text-4xl mb-3 opacity-40">📜</div>
+            <p class="text-sm">No active contracts on the board.<br>Be the first to post a bounty.</p>
+          </div>`;
+        return;
       }
+
+      list.innerHTML = bounties.map((b, i) => {
+        const rot = ((i * 7) % 5 - 2) * 0.7;
+        const avatarUrl = `https://mc-heads.net/avatar/${encodeURIComponent(b.name)}/64`;
+        const tier = getTier(b.amount);
+        const stackStr = formatStacks(b.amount);
+        const isNew = b.id === newlyAddedId;
+
+        return `
+          <article
+            data-bounty-id="${b.id}"
+            class="bounty-card group ${isNew ? 'animate-poster-slap' : ''}"
+            style="--base-rot: ${rot}deg; transform: rotate(${rot}deg);"
+            onmousemove="handleCardTilt(event, this)"
+            onmouseleave="resetCardTilt(this)"
+          >
+            <div class="brass-tack"></div>
+            <div class="bounty-card-inner paper-lines">
+              <div class="card-sheen"></div>
+
+              <div class="relative z-10 flex justify-end mb-1">
+                <button type="button" onclick="openResolveModal('${b.id}')"
+                  class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold text-red-900/75 hover:text-red-950 bg-red-900/10 hover:bg-red-900/20 border border-red-900/15 transition">
+                  <span>Resolve</span>
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+
+              <div class="text-center border-y border-red-900/25 py-1 mb-3 bg-red-950/[0.04]">
+                <span class="font-display text-xs font-black tracking-[0.28em] text-[#8f1d1d] uppercase">Wanted</span>
+              </div>
+
+              <div class="flex flex-col items-center text-center my-2">
+                <div class="relative mb-2.5">
+                  <img src="${avatarUrl}" alt="${escapeHtml(b.name)}"
+                    onerror="this.onerror=null; this.src='${FALLBACK_AVATAR}';"
+                    class="mc-avatar-frame w-16 h-16 rounded-lg object-cover transition-transform duration-300 group-hover:scale-105">
+                  <div class="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-serif-title font-black text-amber-100 shadow-md border border-amber-200/40"
+                    style="background: radial-gradient(circle at 35% 35%, #dc2626, ${tier.sealColor});">⚔</div>
+                </div>
+                <h4 class="font-serif-title text-lg sm:text-xl font-extrabold text-[#261409] leading-tight break-words max-w-full px-1">
+                  ${escapeHtml(b.name)}
+                </h4>
+                ${b.reason ? `<p class="mt-1.5 text-xs italic text-[#5c3d24] line-clamp-2 px-2">“${escapeHtml(b.reason)}”</p>` 
+                  : `<p class="mt-1 text-[11px] text-[#7a5638]/75">Dead or Alive · Bring Proof</p>`}
+              </div>
+
+              <div class="mt-3 pt-2">
+                <div class="mc-diamond-badge rounded-lg px-3 py-2.5 flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <svg class="w-5 h-5 shrink-0 drop-shadow-[0_0_6px_rgba(77,238,234,0.65)]" viewBox="0 0 24 24" fill="none">
+                      <polygon points="12 2 21 9 12 22 3 9" fill="#22d3ee"/>
+                      <polygon points="12 2 21 9 12 11" fill="#cffafe"/>
+                      <polygon points="12 2 3 9 12 11" fill="#67e8f9"/>
+                      <polygon points="12 11 21 9 12 22" fill="#0e7490"/>
+                    </svg>
+                    <span class="font-mono-num text-sm sm:text-base font-bold text-[#f7e39c] truncate">
+                      ${Number(b.amount).toLocaleString()} <span class="text-xs font-semibold text-cyan-300">Diamonds</span>
+                    </span>
+                  </div>
+                  ${stackStr ? `<span class="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono-num font-bold bg-cyan-400/15 text-cyan-200 border border-cyan-400/25">${stackStr}</span>` : ''}
+                </div>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      newlyAddedId = null;
+    }
+
+    function handleCardTilt(e, card) {
+      if (card.classList.contains('animate-poster-tear')) return;
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const px = x / rect.width;
+      const py = y / rect.height;
+      const rotateY = (px - 0.5) * 11;
+      const rotateX = (0.5 - py) * 11;
+      card.style.setProperty('--mx', `${(px * 100).toFixed(1)}%`);
+      card.style.setProperty('--my', `${(py * 100).toFixed(1)}%`);
+      card.style.transition = 'transform 0.08s ease-out';
+      card.style.transform = `perspective(700px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-5px) scale(1.02)`;
+      card.style.zIndex = '20';
+    }
+
+    function resetCardTilt(card) {
+      if (card.classList.contains('animate-poster-tear')) return;
+      card.style.transition = 'transform 0.35s cubic-bezier(0.22,1,0.36,1)';
+      card.style.transform = 'rotate(var(--base-rot, 0deg))';
+      card.style.zIndex = '';
+    }
+
+    // Live preview
+    const nameInputEl = document.getElementById('name');
+    const amountInputEl = document.getElementById('amount');
+    const previewHeadEl = document.getElementById('previewHead');
+    const stackHelperEl = document.getElementById('stackHelper');
+
+    let avatarDebounce;
+    nameInputEl.addEventListener('input', () => {
+      clearTimeout(avatarDebounce);
+      const val = nameInputEl.value.trim();
+      avatarDebounce = setTimeout(() => {
+        previewHeadEl.src = `https://mc-heads.net/avatar/${encodeURIComponent(val || 'Steve')}/40`;
+      }, 240);
     });
 
-    quests.forEach(function (b, i) {
-      var li = nodes[b.id].li;
-      if (listEl.children[i] !== li) listEl.insertBefore(li, listEl.children[i] || null);
+    amountInputEl.addEventListener('input', () => {
+      const val = parseInt(amountInputEl.value, 10);
+      stackHelperEl.textContent = (val && val >= 64) ? `= ${formatStacks(val)}` : '';
     });
 
-    quests.forEach(function (b) {
-      var n = nodes[b.id];
-      countTo(n, b.diamonds);
-      var s = stacks(b.diamonds);
-      n.stacks.textContent = s ? "(" + s + ")" : "";
-    });
+    function setQuickAmount(val) {
+      amountInputEl.value = val;
+      amountInputEl.dispatchEvent(new Event('input'));
+      amountInputEl.focus();
+    }
 
-    updateEmpty();
-    flip(prev);
-    fresh.forEach(function (id, i) {
-      enter(nodes[id], initial ? 950 + i * 130 : 0);
-    });
-  }
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const name = nameInputEl.value.trim();
+      const amount = parseInt(amountInputEl.value, 10);
+      const reason = document.getElementById('reason').value.trim();
 
-  /* ---------- Quest erfüllen & entfernen ---------- */
-  function removeQuest(id, btn) {
-    var n = nodes[id];
-    if (!n || n.leaving) return;
-    n.leaving = true;
-    btn.disabled = true;
-    quests = quests.filter(function (b) { return b.id !== id; });
-    save();
-    n.li.classList.add("leaving");
+      if (!name) { showToast('Enter a target player name!', 'warning'); nameInputEl.focus(); return; }
+      if (!amount || amount < 1) { showToast('Bounty must be at least 1 diamond!', 'warning'); amountInputEl.focus(); return; }
 
-    setTimeout(function () {
-      var prev = snapshot();
-      function done() {
-        n.li.remove();
-        delete nodes[id];
-        updateEmpty();
-        flip(prev, id);
+      const newRef = bountiesRef.push();
+      const newEntry = {
+        name,
+        amount,
+        reason,
+        createdAt: Date.now()
+      };
+
+      newlyAddedId = newRef.key;
+      newRef.set(newEntry);
+
+      nameInputEl.value = '';
+      amountInputEl.value = '';
+      document.getElementById('reason').value = '';
+      stackHelperEl.textContent = '';
+      previewHeadEl.src = 'https://mc-heads.net/avatar/Steve/40';
+
+      showToast(`Wanted poster pinned for ${name} (${amount.toLocaleString()} ♦)`, 'success');
+    }
+
+    function openResolveModal(id) {
+      const bounty = bounties.find(b => b.id === id);
+      if (!bounty) return;
+      pendingModalId = id;
+      document.getElementById('modalAvatar').src = `https://mc-heads.net/avatar/${encodeURIComponent(bounty.name)}/64`;
+      document.getElementById('modalTargetName').textContent = bounty.name;
+      document.getElementById('modalRewardText').textContent = `${Number(bounty.amount).toLocaleString()} Diamonds Reward`;
+      document.getElementById('confirmClaimBtn').onclick = () => resolveBounty(id, true);
+      document.getElementById('confirmRemoveBtn').onclick = () => resolveBounty(id, false);
+
+      const modal = document.getElementById('actionModal');
+      const card = document.getElementById('actionModalCard');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      requestAnimationFrame(() => {
+        modal.classList.remove('opacity-0');
+        card.classList.remove('scale-95');
+        card.classList.add('scale-100');
+      });
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('actionModal');
+      const card = document.getElementById('actionModalCard');
+      modal.classList.add('opacity-0');
+      card.classList.remove('scale-100');
+      card.classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        pendingModalId = null;
+      }, 200);
+    }
+
+    document.getElementById('actionModal').addEventListener('click', e => { if (e.target.id === 'actionModal') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && pendingModalId) closeModal(); });
+
+    function resolveBounty(id, isClaimed) {
+      const index = bounties.findIndex(b => b.id === id);
+      if (index === -1) { closeModal(); return; }
+
+      const targetBounty = bounties[index];
+      const cardEl = document.querySelector(`[data-bounty-id="${id}"]`);
+      closeModal();
+
+      if (cardEl) {
+        const rect = cardEl.getBoundingClientRect();
+        if (isClaimed) spawnDiamondBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        cardEl.classList.add('animate-poster-tear');
+        setTimeout(() => {
+          bountiesRef.child(id).remove();
+          showToast(isClaimed 
+            ? `Bounty claimed! Collected ${Number(targetBounty.amount).toLocaleString()} ♦ for ${targetBounty.name}.` 
+            : `Tore down bounty notice for ${targetBounty.name}.`, 
+            isClaimed ? 'diamond' : 'neutral');
+        }, 360);
+      } else {
+        bountiesRef.child(id).remove();
       }
-      if (reduce) { done(); return; }
-      var a = n.li.animate([
-        { opacity: 1, translate: "0 0", filter: "none" },
-        { opacity: 0, translate: "0 60px", filter: "blur(4px) brightness(.3)" }
-      ], { duration: 600, easing: "cubic-bezier(.5, 0, .75, 0)", fill: "forwards" });
-      a.onfinish = done;
-    }, reduce ? 0 : 900);
-  }
-
-  /* ---------- Eingabe ---------- */
-  function updateAmountHint() {
-    var n = parseInt(amountEl.value, 10);
-    amountHint.className = "hint";
-    if (isNaN(n) || n < 1) { amountHint.textContent = "Mindestens 1 Diamant."; return; }
-    if (n > MAX) { amountHint.textContent = "Maximal " + MAX + " Diamanten."; return; }
-    amountHint.textContent = stacks(n);
-  }
-
-  function submit() {
-    var issuer = issuerEl.value.trim();
-    var title = questEl.value.trim();
-    var n = parseInt(amountEl.value, 10);
-    var ok = true;
-
-    issuerHint.className = "hint";
-    if (!NAME_RE.test(issuer)) {
-      issuerHint.className = "hint error";
-      issuerHint.textContent = "Ungültiger Name (3 bis 16 Zeichen: Buchstaben, Zahlen, Unterstrich).";
-      wiggle(issuerEl);
-      ok = false;
     }
 
-    nameHint.className = "hint";
-    if (title.length < 3 || title.length > 30) {
-      nameHint.className = "hint error";
-      nameHint.textContent = "Der Titel muss zwischen 3 und 30 Zeichen lang sein.";
-      wiggle(questEl);
-      ok = false;
+    function loadSampleBounties() {
+      const samples = [
+        { name: 'Herobrine', amount: 576, reason: 'Haunting strip mines & removing leaves' },
+        { name: 'Technoblade', amount: 256, reason: 'Unstoppable PvP dominance' },
+        { name: 'Dream', amount: 128, reason: 'Speedrunning away from the server guard' },
+        { name: 'Grian', amount: 64, reason: 'Leaving the backs of mansions unfinished' },
+        { name: 'Creeper', amount: 16, reason: 'Destroying the wheat farm again' }
+      ];
+      const now = Date.now();
+      samples.forEach((s, idx) => {
+        const ref = bountiesRef.push();
+        ref.set({
+          name: s.name,
+          amount: s.amount,
+          reason: s.reason,
+          createdAt: now - idx * 5000
+        });
+      });
+      showToast('Pinned 5 notorious Guild bounties!', 'success');
     }
 
-    if (isNaN(n) || n < 1 || n > MAX) {
-      amountHint.className = "hint error";
-      amountHint.textContent = "Gib eine Zahl zwischen 1 und " + MAX + " ein.";
-      wiggle(amountEl);
-      ok = false;
+    function showToast(message, type = 'neutral') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const styles = {
+        success: 'bg-[#1f3615] border-emerald-400/50 text-emerald-100',
+        diamond: 'bg-[#112c33] border-cyan-400/60 text-cyan-100',
+        warning: 'bg-[#3d1e12] border-amber-400/60 text-amber-100',
+        neutral: 'bg-[#2b1a0e] border-amber-500/35 text-amber-100'
+      };
+      toast.className = `toast-enter pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl backdrop-blur-md text-xs sm:text-sm font-semibold ${styles[type] || styles.neutral}`;
+      toast.innerHTML = `<span class="w-2 h-2 rounded-full shrink-0 ${type === 'diamond' ? 'bg-cyan-400' : type === 'success' ? 'bg-emerald-400' : 'bg-amber-400'}"></span><span class="flex-1 leading-snug">${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        setTimeout(() => toast.remove(), 260);
+      }, 3400);
     }
-    if (!ok) return;
 
-    var newId = issuer.toLowerCase() + "-" + title.toLowerCase().replace(/[^a-z0-9]/g, "") + "-" + Date.now();
-    quests.push({ id: newId, issuer: issuer, title: title, diamonds: n });
-    save();
-    render(false);
-
-    if (!reduce) {
-      formEl.animate([{ translate: "0 0" }, { translate: "0 5px" }, { translate: "0 0" }], { duration: 320, easing: EASE });
-      submitBtn.animate([{ scale: 1 }, { scale: .96 }, { scale: 1 }], { duration: 320, easing: EASE });
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
-    questEl.value = "";
-    nameHint.textContent = "Quest erfolgreich veröffentlicht.";
-    questEl.focus();
-  }
 
-  document.querySelectorAll("[data-add]").forEach(function (b) {
-    b.addEventListener("click", function () {
-      var cur = parseInt(amountEl.value, 10) || 0;
-      amountEl.value = Math.min(MAX, cur + parseInt(b.getAttribute("data-add"), 10));
-      updateAmountHint();
-    });
-  });
-  amountEl.addEventListener("input", updateAmountHint);
-  submitBtn.addEventListener("click", submit);
-  questEl.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
-  issuerEl.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
+    // Particle engines
+    const ambientCanvas = document.getElementById('ambientCanvas');
+    const aCtx = ambientCanvas.getContext('2d');
+    const burstCanvas = document.getElementById('burstCanvas');
+    const bCtx = burstCanvas.getContext('2d');
+    let embers = [];
+    let diamondParticles = [];
 
-  /* ---------- Laternenlicht ---------- */
-  var light = document.getElementById("light");
-  var tx = window.innerWidth / 2, ty = window.innerHeight * 0.35, cx = tx, cy = ty;
-  window.addEventListener("pointermove", function (e) {
-    tx = e.clientX; ty = e.clientY;
-    if (reduce) {
-      light.style.setProperty("--mx", tx + "px");
-      light.style.setProperty("--my", ty + "px");
+    function resizeCanvases() {
+      ambientCanvas.width = window.innerWidth;
+      ambientCanvas.height = window.innerHeight;
+      burstCanvas.width = window.innerWidth;
+      burstCanvas.height = window.innerHeight;
     }
-  }, { passive: true });
-  if (!reduce) {
-    (function loop(t) {
-      cx += (tx - cx) * 0.08;
-      cy += (ty - cy) * 0.08;
-      var r = 430 + 12 * Math.sin(t / 230) + 8 * Math.sin(t / 97);
-      light.style.setProperty("--mx", cx.toFixed(1) + "px");
-      light.style.setProperty("--my", cy.toFixed(1) + "px");
-      light.style.setProperty("--r", r.toFixed(1) + "px");
-      requestAnimationFrame(loop);
-    })(performance.now());
-  }
 
-  /* ---------- Staub ---------- */
-  if (!reduce) {
-    var dust = document.getElementById("dust");
-    for (var i = 0; i < 26; i++) {
-      var p = document.createElement("i");
-      p.style.setProperty("--x", (Math.random() * 100) + "%");
-      p.style.setProperty("--s", (2 + Math.random() * 2.5) + "px");
-      p.style.setProperty("--d", (16 + Math.random() * 22) + "s");
-      p.style.setProperty("--l", "-" + (Math.random() * 30) + "s");
-      p.style.setProperty("--dx", (Math.random() * 160 - 80) + "px");
-      dust.appendChild(p);
+    function initEmbers() {
+      const count = Math.min(38, Math.floor(window.innerWidth / 32));
+      embers = Array.from({ length: count }, () => ({
+        x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight,
+        r: Math.random() * 2 + 0.8, vy: -(Math.random() * 0.35 + 0.12),
+        vx: (Math.random() - 0.5) * 0.25, alpha: Math.random() * 0.45 + 0.15, phase: Math.random() * Math.PI * 2
+      }));
     }
-  }
 
-  updateAmountHint();
-  render(true);
-})();
-</script>
+    function spawnDiamondBurst(cx, cy) {
+      for (let i = 0; i < 34; i++) {
+        const angle = (Math.PI * 2 * i) / 34 + (Math.random() - 0.5) * 0.3;
+        const speed = Math.random() * 6.5 + 2.5;
+        diamondParticles.push({
+          x: cx, y: cy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2.2,
+          size: Math.random() * 6 + 5, rot: Math.random() * Math.PI, vRot: (Math.random() - 0.5) * 0.2,
+          life: 1, decay: Math.random() * 0.018 + 0.014,
+          color: i % 3 === 0 ? '#a5f3fc' : i % 2 === 0 ? '#22d3ee' : '#fde047'
+        });
+      }
+    }
+
+    function animateCanvases() {
+      aCtx.clearRect(0, 0, ambientCanvas.width, ambientCanvas.height);
+      for (const p of embers) {
+        p.x += p.vx + Math.sin(p.phase) * 0.15; p.y += p.vy; p.phase += 0.02;
+        if (p.y < -10) { p.y = ambientCanvas.height + 10; p.x = Math.random() * ambientCanvas.width; }
+        if (p.x < -10) p.x = ambientCanvas.width + 10;
+        if (p.x > ambientCanvas.width + 10) p.x = -10;
+        aCtx.beginPath(); aCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        aCtx.fillStyle = `rgba(255, 190, 105, ${p.alpha * (0.7 + 0.3 * Math.sin(p.phase))})`; aCtx.fill();
+      }
+
+      bCtx.clearRect(0, 0, burstCanvas.width, burstCanvas.height);
+      for (let i = diamondParticles.length - 1; i >= 0; i--) {
+        const d = diamondParticles[i];
+        d.x += d.vx; d.y += d.vy; d.vy += 0.22; d.vx *= 0.98; d.rot += d.vRot; d.life -= d.decay;
+        if (d.life <= 0) { diamondParticles.splice(i, 1); continue; }
+        bCtx.save(); bCtx.translate(d.x, d.y); bCtx.rotate(d.rot); bCtx.globalAlpha = Math.max(0, d.life);
+        bCtx.fillStyle = d.color; bCtx.beginPath();
+        bCtx.moveTo(0, -d.size); bCtx.lineTo(d.size * 0.75, 0); bCtx.lineTo(0, d.size); bCtx.lineTo(-d.size * 0.75, 0);
+        bCtx.closePath(); bCtx.fill(); bCtx.restore();
+      }
+      requestAnimationFrame(animateCanvases);
+    }
+
+    window.addEventListener('resize', resizeCanvases);
+
+    window.onload = function () {
+      resizeCanvases();
+      initEmbers();
+      animateCanvases();
+    };
+  </script>
 </body>
 </html>
