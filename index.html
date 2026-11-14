@@ -3,22 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gesucht! Kopfgeld-Tafel</title>
+<title>Syndikat-Kontrakte | Schattennetz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rye&family=Special+Elite&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
   :root {
-    --wood-1: #1a0f07;
-    --wood-2: #110904;
-    --wood-line: #070301;
-    --paper: #b0955d;
-    --paper-dark: #8c713f;
-    --ink: #120803;
-    --blood: #61130d;
-    --gold: #73531b;
+    --wood-1: #0d0907;
+    --wood-2: #050403;
+    --wood-line: #020101;
+    --paper: #181614;
+    --paper-dark: #24201d;
+    --paper-border: #3d352e;
+    --text: #c8b9a6;
+    --blood: #8a1c1c;
+    --blood-glow: rgba(138, 28, 28, 0.4);
+    --gold: #b38f36;
     --ease: cubic-bezier(.22, 1, .36, 1);
-    --head: "Rye", "Rockwell", Georgia, serif;
+    --head: "Share Tech Mono", "Courier New", monospace;
     --body: "Special Elite", "Courier New", monospace;
   }
   * { box-sizing: border-box; }
@@ -27,34 +29,34 @@
     margin: 0;
     min-height: 100vh;
     font-family: var(--body);
-    font-size: 17px;
+    font-size: 16px;
     line-height: 1.4;
-    color: var(--ink);
+    color: var(--text);
     padding: 36px 16px 80px;
     overflow-x: hidden;
     background:
       /* Holzmuster-Rillen */
-      repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 5px),
-      /* Realistische Holzbohlen */
+      repeating-linear-gradient(0deg, rgba(0,0,0,.35) 0 1px, transparent 1px 6px),
+      /* Dunkle, massive Holzbohlen */
       repeating-linear-gradient(90deg, 
-        #060201 0px, 
-        #0d0603 3px, 
-        #1c0f07 18px, 
-        #140a04 125px, 
-        #0a0402 137px, 
-        #060201 140px
+        #030201 0px, 
+        #070504 4px, 
+        #110c08 20px, 
+        #0a0705 130px, 
+        #040302 138px, 
+        #030201 142px
       ),
       linear-gradient(180deg, var(--wood-1), var(--wood-2));
   }
-  main { position: relative; z-index: 2; max-width: 900px; margin: 0 auto; }
+  main { position: relative; z-index: 2; max-width: 940px; margin: 0 auto; }
 
-  /* Atmosphäre: Nebel, Staub, Laternenlicht */
+  /* Atmosphäre: Schatten, Staub, kaltes Licht */
   .fog {
     position: fixed; left: -20%; right: -20%; bottom: -10%; height: 45%;
     pointer-events: none; z-index: 1;
     background:
-      radial-gradient(ellipse at 20% 80%, rgba(150,140,120,.06), transparent 60%),
-      radial-gradient(ellipse at 70% 90%, rgba(150,140,120,.05), transparent 55%);
+      radial-gradient(ellipse at 20% 80%, rgba(30,25,20,.15), transparent 60%),
+      radial-gradient(ellipse at 70% 90%, rgba(20,15,10,.2), transparent 55%);
     animation: fog 40s ease-in-out infinite alternate;
   }
   @keyframes fog { from { transform: translateX(-5%); } to { transform: translateX(5%); } }
@@ -63,245 +65,262 @@
   .dust i {
     position: absolute; top: 100%; left: var(--x);
     width: var(--s); height: var(--s); border-radius: 50%;
-    background: rgba(205,175,120,.4);
+    background: rgba(180,160,140,.25);
     opacity: 0;
     animation: drift var(--d) linear var(--l) infinite;
   }
   @keyframes drift {
     0% { transform: translate(0, 0); opacity: 0; }
-    12% { opacity: .7; }
-    88% { opacity: .4; }
+    12% { opacity: .5; }
+    88% { opacity: .2; }
     100% { transform: translate(var(--dx), -112vh); opacity: 0; }
   }
 
   #light {
     position: fixed; inset: 0; pointer-events: none; z-index: 50;
-    background: radial-gradient(circle var(--r, 420px) at var(--mx, 50%) var(--my, 35%),
-      rgba(255,140,40,.05) 0%, rgba(0,0,0,0) 50%, rgba(2,1,0,.6) 100%);
+    background: radial-gradient(circle var(--r, 450px) at var(--mx, 50%) var(--my, 35%),
+      rgba(138,28,28,.04) 0%, rgba(0,0,0,0) 55%, rgba(2,1,0,.85) 100%);
   }
 
-  /* Titelschild */
+  /* Terminal-Schild */
   .sign {
     position: relative;
     text-align: center;
-    background: linear-gradient(180deg, #241409, var(--wood-1));
-    border: 6px solid var(--wood-line);
-    outline: 3px solid var(--gold);
-    outline-offset: -12px;
-    padding: 26px 20px 22px;
+    background: linear-gradient(180deg, #140d0a, var(--wood-1));
+    border: 3px solid var(--paper-border);
+    outline: 2px solid var(--gold);
+    outline-offset: -8px;
+    padding: 24px 20px;
     margin: 0 auto 40px;
-    max-width: 640px;
-    box-shadow: 0 12px 0 rgba(0,0,0,.65);
-    transform-origin: 50% 0;
-    animation: signDrop 1.3s var(--ease) both;
-  }
-  @keyframes signDrop {
-    0% { opacity: 0; transform: translateY(-120px) rotate(-3deg); }
-    55% { opacity: 1; transform: translateY(8px) rotate(1.2deg); }
-    78% { transform: translateY(0) rotate(-.5deg); }
-    100% { transform: none; }
+    max-width: 680px;
+    box-shadow: 0 16px 30px rgba(0,0,0,.8);
   }
   .sign h1 {
     font-family: var(--head);
-    font-weight: 400;
-    font-size: clamp(34px, 9vw, 64px);
+    font-weight: 700;
+    letter-spacing: 3px;
+    font-size: clamp(28px, 7vw, 48px);
     line-height: 1;
-    margin: 0 0 8px;
-    color: #c4aa72;
-    animation: flicker 7s linear infinite;
+    margin: 0 0 6px;
+    color: #dfd0be;
+    text-shadow: 0 0 10px rgba(138,28,28,.5);
   }
-  @keyframes flicker {
-    0%, 100% { text-shadow: 3px 3px 0 #070301, 0 0 18px rgba(255,120,30,.25); }
-    6% { text-shadow: 3px 3px 0 #070301, 0 0 10px rgba(255,120,30,.12); }
-    9% { text-shadow: 3px 3px 0 #070301, 0 0 22px rgba(255,120,30,.32); }
-    47% { text-shadow: 3px 3px 0 #070301, 0 0 14px rgba(255,120,30,.2); }
-    50% { text-shadow: 3px 3px 0 #070301, 0 0 6px rgba(255,120,30,.08); }
-    53% { text-shadow: 3px 3px 0 #070301, 0 0 20px rgba(255,120,30,.3); }
-  }
-  .sign p { margin: 0; color: #8c713f; }
+  .sign p { margin: 0; color: var(--gold); font-size: 14px; letter-spacing: 1px; font-family: var(--head); }
 
-  /* Papier */
-  .paper {
+  /* Dossier / Formular */
+  .dossier {
     position: relative;
-    background:
-      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.12), transparent 55%),
-      radial-gradient(ellipse at 100% 100%, rgba(50,20,5,.45), transparent 60%),
-      var(--paper);
-    border: 3px solid var(--ink);
+    background: var(--paper);
+    border: 2px solid var(--paper-border);
     box-shadow:
-      inset 0 0 45px rgba(40,16,3,.7),
-      inset 0 0 8px rgba(0,0,0,.75),
-      6px 8px 0 rgba(0,0,0,.7);
-    padding: 26px 22px 22px;
-  }
-  .paper::before, .paper::after {
-    content: "";
-    position: absolute;
-    top: 8px;
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #777, #0d0d0d);
-  }
-  .paper::before { left: 8px; }
-  .paper::after { right: 8px; }
-
-  .form {
-    max-width: 560px;
+      inset 0 0 30px rgba(0,0,0,.9),
+      0 12px 25px rgba(0,0,0,.7);
+    padding: 30px 24px 24px;
+    max-width: 600px;
     margin: 0 auto 52px;
-    rotate: -.6deg;
-    animation: rise 1s var(--ease) .55s both;
   }
-  @keyframes rise { from { opacity: 0; translate: 0 40px; } to { opacity: 1; translate: 0 0; } }
-  .form h2 {
+  .dossier::before {
+    content: "STRIKT GEHEIM // BLACKSITE DOSSIER";
+    position: absolute;
+    top: -12px;
+    left: 24px;
+    background: var(--wood-2);
+    padding: 0 10px;
+    font-size: 11px;
+    color: var(--blood);
     font-family: var(--head);
-    font-weight: 400;
-    font-size: 30px;
+    letter-spacing: 2px;
+  }
+
+  .dossier h2 {
+    font-family: var(--head);
+    font-weight: 700;
+    letter-spacing: 2px;
+    font-size: 24px;
     text-align: center;
     margin: 0 0 4px;
-    color: var(--blood);
+    color: #dfd0be;
   }
-  .form .sub { text-align: center; margin: 0 0 20px; border-bottom: 2px solid var(--ink); padding-bottom: 12px; }
+  .dossier .sub { text-align: center; margin: 0 0 18px; border-bottom: 1px dashed var(--paper-border); padding-bottom: 10px; font-size: 14px; color: #887868; }
 
-  label { display: block; font-size: 15px; margin-bottom: 4px; }
-  .field { margin-bottom: 18px; }
-  
   .rule-notice {
     font-size: 13px;
-    background: rgba(97, 19, 13, 0.12);
+    background: rgba(138, 28, 28, 0.15);
     border-left: 3px solid var(--blood);
-    padding: 8px 10px;
-    margin-bottom: 18px;
-    color: var(--ink);
-    line-height: 1.35;
+    padding: 10px 12px;
+    margin-bottom: 20px;
+    color: #d6c6b2;
+    line-height: 1.4;
   }
 
+  label { display: block; font-size: 14px; margin-bottom: 4px; color: #a39382; font-family: var(--head); letter-spacing: 1px; }
+  .field { margin-bottom: 18px; }
+  
   input[type="text"], input[type="number"] {
     width: 100%;
     font: inherit;
-    font-size: 22px;
-    color: var(--ink);
-    background: rgba(0,0,0,.12);
-    border: 2px solid var(--ink);
+    font-size: 20px;
+    color: #f2e9de;
+    background: #0f0c0a;
+    border: 2px solid var(--paper-border);
     border-radius: 0;
-    padding: 8px 12px;
-    transition: background .3s var(--ease), box-shadow .3s var(--ease);
+    padding: 10px 14px;
+    transition: border-color .3s, box-shadow .3s;
   }
-  input:hover { background: rgba(0,0,0,.18); }
-  input:focus { background: rgba(0,0,0,.24); box-shadow: 0 0 0 3px rgba(97,19,13,.55); outline: none; }
-  input::placeholder { color: rgba(18,8,3,.5); }
-  button:focus-visible { outline: 3px solid var(--blood); outline-offset: 2px; }
-  .hint { font-size: 14px; margin-top: 4px; min-height: 1.4em; transition: color .3s; }
-  .hint.error { color: var(--blood); font-weight: bold; }
+  input:hover { border-color: var(--gold); }
+  input:focus { border-color: var(--blood); box-shadow: 0 0 0 2px var(--blood-glow); outline: none; }
+  input::placeholder { color: #554a40; }
+  
+  button:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
+  .hint { font-size: 12px; margin-top: 4px; min-height: 1.4em; color: #887868; transition: color .3s; }
+  .hint.error { color: #ff6b6b; font-weight: bold; }
 
   .amount-wrap { position: relative; }
-  .amount-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); }
-  .amount-wrap input { padding-left: 50px; }
+  .amount-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); }
+  .amount-wrap input { padding-left: 52px; }
   .quick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 
   button {
-    font-family: var(--body);
-    font-size: 15px;
-    color: var(--ink);
+    font-family: var(--head);
+    letter-spacing: 1px;
+    font-size: 14px;
+    color: var(--text);
     background: var(--paper-dark);
-    border: 2px solid var(--ink);
+    border: 1px solid var(--paper-border);
     border-radius: 0;
-    padding: 7px 12px;
+    padding: 8px 12px;
     cursor: pointer;
-    box-shadow: 2px 3px 0 var(--ink);
-    transition: background .3s var(--ease), translate .18s var(--ease), box-shadow .18s var(--ease);
+    box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    transition: all .2s var(--ease);
   }
-  button:hover { background: #73582e; color: #f5e6c8; }
-  button:active { translate: 2px 3px; box-shadow: 0 0 0 var(--ink); }
-  button:disabled { cursor: default; opacity: .6; }
+  button:hover { background: #352e28; color: #fff; border-color: var(--gold); }
+  button:active { transform: translateY(1px); }
+  button:disabled { cursor: default; opacity: .5; }
+  
   button.primary {
     width: 100%;
-    font-family: var(--head);
-    font-size: 22px;
-    color: #e3cfa0;
+    font-size: 18px;
+    color: #fff;
     background: var(--blood);
-    padding: 12px;
-    box-shadow: 3px 4px 0 var(--ink);
+    border: 1px solid #aa2222;
+    padding: 14px;
+    box-shadow: 0 4px 12px rgba(138,28,28,.4);
+    margin-top: 6px;
   }
-  button.primary:hover { background: #4a0d09; box-shadow: 3px 4px 0 var(--ink), 0 0 20px rgba(130,30,20,.45); }
+  button.primary:hover { background: #a32222; box-shadow: 0 6px 18px rgba(138,28,28,.6); }
 
   h3.board-title {
     font-family: var(--head);
-    font-weight: 400;
-    font-size: 28px;
-    color: #c4aa72;
-    text-shadow: 2px 2px 0 var(--wood-line);
+    font-weight: 700;
+    letter-spacing: 2px;
+    font-size: 24px;
+    color: #dfd0be;
+    text-shadow: 2px 2px 0 #000;
     margin: 0 0 24px;
     text-align: center;
   }
-  .empty { text-align: center; color: #8c713f; margin: 0; transition: opacity .5s var(--ease); }
+  .empty { text-align: center; color: #776858; margin: 0; font-family: var(--head); letter-spacing: 1px; }
 
-  /* Steckbriefe */
-  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 34px 26px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
-  li.poster {
-    --tilt: 0deg;
-    rotate: var(--tilt);
-    transform-origin: 50% 10px;
-    padding: 34px 16px 16px;
+  /* Kontrakt-Karten (Dossiers) */
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 30px 24px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+  li.contract-card {
+    position: relative;
+    background: var(--paper);
+    border: 2px solid var(--paper-border);
+    padding: 24px 16px 18px;
     text-align: center;
-    animation: sway var(--sway, 8s) ease-in-out infinite;
-    transition: scale .5s var(--ease), box-shadow .5s var(--ease);
+    box-shadow: 0 8px 20px rgba(0,0,0,.6);
+    transition: transform .3s var(--ease), box-shadow .3s var(--ease);
   }
-  @keyframes sway {
-    0%, 100% { rotate: var(--tilt); }
-    50% { rotate: calc(var(--tilt) + .9deg); }
+  li.contract-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(138,28,28,.25);
+    border-color: var(--gold);
   }
-  li.poster:hover {
-    scale: 1.04;
-    z-index: 5;
-    box-shadow:
-      inset 0 0 45px rgba(40,16,3,.7), inset 0 0 8px rgba(0,0,0,.75),
-      10px 16px 0 rgba(0,0,0,.6), 0 0 34px rgba(255,140,40,.15);
-  }
-  li.poster::before {
-    left: 50%; top: 9px; translate: -50% 0;
-    width: 12px; height: 12px;
-  }
-  li.poster::after { display: none; }
-  li.poster.leaving { pointer-events: none; }
+  li.contract-card.leaving { pointer-events: none; }
 
-  .poster .wanted { font-family: var(--head); font-size: 40px; line-height: 1; color: var(--blood); margin: 0; }
-  .poster .dead { font-size: 14px; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); margin: 8px 0 12px; padding: 2px 0; }
-  .photo { position: relative; width: 128px; height: 128px; margin: 0 auto 10px; border: 3px solid var(--ink); background: #3d2c18; overflow: hidden; }
-  .photo img { width: 100%; height: 100%; display: block; object-fit: cover; filter: sepia(.85) contrast(1.15) brightness(.8); transition: filter .6s var(--ease); }
-  li.poster:hover .photo img { filter: sepia(.4) contrast(1.2) brightness(.95); }
-  .photo::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 25px rgba(0,0,0,.75); pointer-events: none; }
-  .poster .name { font-family: var(--head); font-size: 22px; word-break: break-all; margin-bottom: 4px; }
-  .poster .issuer-tag { font-size: 12px; color: var(--paper-dark); font-style: italic; margin-bottom: 8px; word-break: break-all; }
-  .poster .label { font-size: 13px; margin: 0; }
-  .poster .reward { display: flex; justify-content: center; align-items: center; gap: 8px; font-family: var(--head); font-size: 30px; color: var(--blood); }
-  .poster .stacks { font-size: 13px; min-height: 1.2em; margin-bottom: 12px; }
-  .poster button { width: 100%; }
-
-  /* Stempel */
-  .stamp {
-    position: absolute; left: 50%; top: 46%;
-    font-family: var(--head); font-size: 34px; letter-spacing: 2px;
+  .contract-card .target-badge {
+    font-family: var(--head);
+    font-size: 11px;
+    letter-spacing: 2px;
     color: var(--blood);
-    border: 5px solid var(--blood);
-    padding: 4px 14px;
-    opacity: 0;
-    transform: translate(-50%, -50%) rotate(-14deg);
-    mix-blend-mode: multiply;
-    pointer-events: none;
+    background: rgba(138,28,28,.1);
+    border: 1px solid rgba(138,28,28,.3);
+    padding: 3px 8px;
+    display: inline-block;
+    margin-bottom: 8px;
   }
-  li.poster.leaving .stamp { animation: stamp .4s cubic-bezier(.2, 1.5, .4, 1) forwards; }
+  .contract-card .status-line {
+    font-size: 12px;
+    color: #776858;
+    border-top: 1px dashed var(--paper-border);
+    border-bottom: 1px dashed var(--paper-border);
+    margin: 6px 0 12px;
+    padding: 3px 0;
+    font-family: var(--head);
+  }
+  
+  .photo { 
+    position: relative; 
+    width: 110px; 
+    height: 110px; 
+    margin: 0 auto 12px; 
+    border: 2px solid var(--paper-border); 
+    background: #0f0c0a; 
+    overflow: hidden; 
+  }
+  .photo img { 
+    width: 100%; 
+    height: 100%; 
+    display: block; 
+    object-fit: cover; 
+    filter: grayscale(0.4) contrast(1.2) brightness(0.85); 
+    transition: filter .5s; 
+  }
+  li.contract-card:hover .photo img { filter: grayscale(0) contrast(1.25) brightness(1); }
+  .photo::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 20px rgba(0,0,0,.8); pointer-events: none; }
+
+  .contract-card .name { font-family: var(--head); font-size: 20px; color: #fff; word-break: break-all; margin-bottom: 4px; letter-spacing: 1px; }
+  .contract-card .client-tag { font-size: 11px; color: #887868; font-style: italic; margin-bottom: 12px; word-break: break-all; }
+  .contract-card .label { font-size: 11px; color: var(--gold); margin: 0; font-family: var(--head); letter-spacing: 1px; }
+  
+  .contract-card .reward { 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 8px; 
+    font-family: var(--head); 
+    font-size: 26px; 
+    color: #fff; 
+    margin-bottom: 12px;
+  }
+  .contract-card .stacks { font-size: 11px; color: #887868; min-height: 1.2em; margin-bottom: 12px; font-family: var(--head); }
+  .contract-card button { width: 100%; }
+
+  /* Eliminierungs-Stempel */
+  .stamp {
+    position: absolute; left: 50%; top: 48%;
+    font-family: var(--head); font-weight: 700; font-size: 30px; letter-spacing: 3px;
+    color: var(--blood);
+    border: 4px solid var(--blood);
+    padding: 6px 14px;
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-12deg);
+    pointer-events: none;
+    box-shadow: 0 0 15px rgba(138,28,28,.6);
+  }
+  li.contract-card.leaving .stamp { animation: stamp .35s cubic-bezier(.2, 1.5, .4, 1) forwards; }
   @keyframes stamp {
-    from { opacity: 0; transform: translate(-50%, -50%) rotate(-14deg) scale(2.8); }
-    to { opacity: .92; transform: translate(-50%, -50%) rotate(-14deg) scale(1); }
+    from { opacity: 0; transform: translate(-50%, -50%) rotate(-12deg) scale(2.5); }
+    to { opacity: .95; transform: translate(-50%, -50%) rotate(-12deg) scale(1); }
   }
 
   @media (max-width: 520px) {
-    body { font-size: 16px; }
-    .form { rotate: 0deg; }
+    body { font-size: 15px; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
-    li.poster.leaving .stamp { opacity: .92; }
+    li.contract-card.leaving .stamp { opacity: .95; }
   }
 </style>
 </head>
@@ -312,35 +331,35 @@
 
 <main>
   <header class="sign">
-    <h1>Kopfgeld-Tafel</h1>
-    <p>Wer nachts allein reitet, hängt morgen vielleicht selbst hier.</p>
+    <h1>SYNDIKAT-KONTRAKTE</h1>
+    <p>SCHATTENNETZ INTERN // NUR FÜR AUTORISIERTE AGENTEN</p>
   </header>
 
-  <section class="paper form" id="form" aria-labelledby="new-title">
-    <h2 id="new-title">Neues Kopfgeld</h2>
-    <p class="sub">Trage den Gesuchten ein und lege die Belohnung fest.</p>
+  <section class="dossier" id="form" aria-labelledby="new-title">
+    <h2 id="new-title">Neuen Kontrakt ausstellen</h2>
+    <p class="sub">Geben Sie die Parameter für die Zielperson ein.</p>
     
     <div class="rule-notice">
-      📜 <strong>Wichtiger Hinweis:</strong> Wer hier ein Kopfgeld aussetzt, verpflichtet sich dazu, die angegebene Anzahl an Diamanten persönlich an den erfolgreichen Kopfgeldjäger auszuzahlen, sobald der Bandit erledigt wurde!
+      ⚠️ <strong>Protokoll-Hinweis:</strong> Der Auftraggeber haftet voll für das Honorar. Nach erfolgreicher Eliminierung durch einen Agenten muss das angegebene Diamant-Honorar persönlich und direkt an den Auftragnehmer übergeben werden!
     </div>
 
     <div class="field">
-      <label for="issuer">Dein Minecraft-Name (Auftraggeber)</label>
-      <input type="text" id="issuer" maxlength="16" autocomplete="off" spellcheck="false" placeholder="z. B. Sheriff_Dan">
-      <div class="hint" id="issuerHint">Wer setzt das Kopfgeld aus? (3 bis 16 Zeichen)</div>
+      <label for="issuer">Auftraggeber (Dein Minecraft-Name)</label>
+      <input type="text" id="issuer" maxlength="16" autocomplete="off" spellcheck="false" placeholder="z. B. Handler_47">
+      <div class="hint" id="issuerHint">Wer gibt diesen Auftrag aus? (3 bis 16 Zeichen)</div>
     </div>
 
     <div class="field">
-      <label for="player">Minecraft-Name des Gesuchten</label>
-      <input type="text" id="player" maxlength="16" autocomplete="off" spellcheck="false" placeholder="z. B. Billy_the_Kid">
+      <label for="player">Zielperson (Minecraft-Name des Ziels)</label>
+      <input type="text" id="player" maxlength="16" autocomplete="off" spellcheck="false" placeholder="z. B. Target_Zero">
       <div class="hint" id="nameHint">3 bis 16 Zeichen: Buchstaben, Zahlen, Unterstrich.</div>
     </div>
     
     <div class="field">
-      <label for="amount">Belohnung in Diamanten</label>
+      <label for="amount">Honorar in Diamanten</label>
       <div class="amount-wrap">
-        <svg width="28" height="28" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><use href="#diamond"/></svg>
-        <input type="number" id="amount" min="1" max="2304" step="1" value="5" inputmode="numeric">
+        <svg width="24" height="24" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><use href="#diamond"/></svg>
+        <input type="number" id="amount" min="1" max="2304" step="1" value="10" inputmode="numeric">
       </div>
       <div class="quick">
         <button type="button" data-add="1">+1</button>
@@ -350,17 +369,17 @@
       </div>
       <div class="hint" id="amountHint"></div>
     </div>
-    <button type="button" class="primary" id="submit">Kopfgeld aussetzen</button>
+    <button type="button" class="primary" id="submit">Kontrakt freigeben</button>
   </section>
 
   <section aria-labelledby="list-title">
-    <h3 class="board-title" id="list-title">Gesuchte Banditen</h3>
-    <p class="empty" id="empty">Das Brett ist leer. Noch ist es still in der Stadt.</p>
+    <h3 class="board-title" id="list-title">Aktive Zielpersonen</h3>
+    <p class="empty" id="empty">Keine aktiven Kontrakte im System.</p>
     <ul id="list"></ul>
   </section>
 </main>
 
-<!-- Pixel-Diamant -->
+<!-- Pixel-Diamant SVG Referenz -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <g id="diamond">
@@ -379,9 +398,9 @@
 
 <script>
 (function () {
-  var STORAGE_KEY = "mc-bounties";
+  var STORAGE_KEY = "syndicate-contracts-v1";
   var NAME_RE = /^[A-Za-z0-9_]{3,16}$/;
-  var MAX = 2304; // 36 Slots x 64 Diamanten
+  var MAX = 2304; 
   var EASE = "cubic-bezier(.22, 1, .36, 1)";
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -396,8 +415,8 @@
   var formEl = document.getElementById("form");
   var submitBtn = document.getElementById("submit");
 
-  var bounties = load();
-  var nodes = {}; // name -> { li, num, stacks, reward, shown, tilt }
+  var contracts = load();
+  var nodes = {}; 
 
   /* ---------- Speicher ---------- */
   function load() {
@@ -408,7 +427,7 @@
     } catch (e) { return []; }
   }
   function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(bounties)); } catch (e) {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(contracts)); } catch (e) {}
   }
 
   /* ---------- Hilfen ---------- */
@@ -423,25 +442,20 @@
     if (text !== undefined) e.textContent = text;
     return e;
   }
-  function hash(str) {
-    var h = 0;
-    for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
-    return Math.abs(h);
-  }
   function wiggle(target) {
     if (reduce) return;
     target.animate(
-      [{ translate: "0 0" }, { translate: "-7px 0" }, { translate: "6px 0" }, { translate: "-4px 0" }, { translate: "2px 0" }, { translate: "0 0" }],
-      { duration: 420, easing: "ease-out" }
+      [{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(0)" }],
+      { duration: 350, easing: "ease-out" }
     );
   }
 
-  /* ---------- Hochzählen der Belohnung ---------- */
+  /* ---------- Zählen ---------- */
   function countTo(n, to) {
     var from = n.shown;
     n.shown = to;
     if (reduce || from === to) { n.num.textContent = to; return; }
-    var t0 = performance.now(), dur = 800;
+    var t0 = performance.now(), dur = 700;
     (function step(t) {
       var k = Math.min(1, (t - t0) / dur);
       var e = 1 - Math.pow(1 - k, 3);
@@ -449,25 +463,21 @@
       if (k < 1) requestAnimationFrame(step);
     })(t0);
     if (from > 0) {
-      n.reward.animate([{ scale: 1 }, { scale: 1.28 }, { scale: 1 }], { duration: 520, easing: EASE });
+      n.reward.animate([{ transform: "scale(1)" }, { transform: "scale(1.2)" }, { transform: "scale(1)" }], { duration: 400, easing: EASE });
     }
   }
 
   /* ---------- Karten bauen ---------- */
   function build(b) {
-    var li = el("li", "paper poster");
-    var tilt = ((hash(b.name) % 7) - 3) * 0.55;
-    li.style.setProperty("--tilt", tilt + "deg");
-    li.style.setProperty("--sway", (6 + (hash(b.name) % 40) / 10) + "s");
-    li.style.animationDelay = "-" + ((hash(b.name) % 60) / 10) + "s";
+    var li = el("li", "contract-card");
 
-    li.appendChild(el("p", "wanted", "Gesucht"));
-    li.appendChild(el("div", "dead", "TOT ODER LEBENDIG"));
+    var badge = el("div", "target-badge", "ZIEL-DOSSIER");
+    li.appendChild(badge);
 
     var photo = el("div", "photo");
     var img = document.createElement("img");
-    img.alt = "Kopf von " + b.name;
-    // 3D-Bust-Render (Crafthead) mit Fallback auf Minotar Helm
+    img.alt = "Ziel: " + b.name;
+    // 3D Bust Render mit Fallback auf Minotar Helm
     img.src = "https://crafthead.net/bust/" + encodeURIComponent(b.name) + "/128.png";
     img.onerror = function () {
       if (!img.src.includes("minotar")) {
@@ -480,13 +490,14 @@
     li.appendChild(photo);
 
     li.appendChild(el("div", "name", b.name));
-    li.appendChild(el("div", "issuer-tag", "Ausgesetzt von: " + (b.issuer || "Unbekannt")));
-    li.appendChild(el("p", "label", "Belohnung"));
+    li.appendChild(el("div", "client-tag", "Auftraggeber: " + (b.issuer || "Unbekannt")));
+    li.appendChild(el("div", "status-line", "STATUS: AKTIV"));
+    li.appendChild(el("p", "label", "HONORAR"));
 
     var reward = el("div", "reward");
     var ns = "http://www.w3.org/2000/svg";
     var svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("width", "28"); svg.setAttribute("height", "28");
+    svg.setAttribute("width", "24"); svg.setAttribute("height", "24");
     svg.setAttribute("viewBox", "0 0 8 8");
     svg.setAttribute("shape-rendering", "crispEdges");
     svg.setAttribute("aria-hidden", "true");
@@ -502,18 +513,18 @@
     var st = el("div", "stacks", "");
     li.appendChild(st);
 
-    var btn = el("button", "", "Einlösen");
+    var btn = el("button", "", "Kontrakt erfüllen");
     btn.type = "button";
-    btn.setAttribute("aria-label", "Kopfgeld auf " + b.name + " einlösen und entfernen");
-    btn.addEventListener("click", function () { removeBounty(b.name, btn); });
+    btn.setAttribute("aria-label", "Ziel " + b.name + " eliminieren und Kontrakt schließen");
+    btn.addEventListener("click", function () { removeContract(b.name, btn); });
     li.appendChild(btn);
 
-    li.appendChild(el("div", "stamp", "ERLEDIGT"));
+    li.appendChild(el("div", "stamp", "ELIMINIERT"));
 
-    return { li: li, num: num, stacks: st, reward: reward, shown: 0, tilt: tilt };
+    return { li: li, num: num, stacks: st, reward: reward, shown: 0 };
   }
 
-  /* ---------- FLIP: Karten gleiten an ihren neuen Platz ---------- */
+  /* ---------- FLIP Animation ---------- */
   function snapshot() {
     var s = {};
     Object.keys(nodes).forEach(function (k) { s[k] = nodes[k].li.getBoundingClientRect(); });
@@ -527,22 +538,10 @@
       var dx = prev[k].left - r.left, dy = prev[k].top - r.top;
       if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
       nodes[k].li.animate(
-        [{ translate: dx + "px " + dy + "px" }, { translate: "0 0" }],
-        { duration: 700, easing: EASE }
+        [{ transform: "translate(" + dx + "px, " + dy + "px)" }, { transform: "translate(0, 0)" }],
+        { duration: 600, easing: EASE }
       );
     });
-  }
-
-  /* ---------- Plakat fällt von oben an den Nagel ---------- */
-  function enter(n, delay) {
-    if (reduce) return;
-    var t = n.tilt;
-    n.li.animate([
-      { opacity: 0, translate: "0 -110px", rotate: (t - 9) + "deg", offset: 0 },
-      { opacity: 1, translate: "0 8px", rotate: (t + 3.5) + "deg", offset: .5 },
-      { translate: "0 0", rotate: (t - 1.6) + "deg", offset: .75 },
-      { translate: "0 0", rotate: t + "deg", offset: 1 }
-    ], { duration: 1200, delay: delay || 0, easing: EASE, fill: "backwards" });
   }
 
   function updateEmpty() {
@@ -550,23 +549,23 @@
   }
 
   function render(initial) {
-    bounties.sort(function (a, b) { return b.diamonds - a.diamonds; });
+    contracts.sort(function (a, b) { return b.diamonds - a.diamonds; });
     var prev = snapshot();
     var fresh = [];
 
-    bounties.forEach(function (b) {
+    contracts.forEach(function (b) {
       if (!nodes[b.name]) {
         nodes[b.name] = build(b);
         fresh.push(b.name);
       }
     });
 
-    bounties.forEach(function (b, i) {
+    contracts.forEach(function (b, i) {
       var li = nodes[b.name].li;
       if (listEl.children[i] !== li) listEl.insertBefore(li, listEl.children[i] || null);
     });
 
-    bounties.forEach(function (b) {
+    contracts.forEach(function (b) {
       var n = nodes[b.name];
       countTo(n, b.diamonds);
       var s = stacks(b.diamonds);
@@ -575,18 +574,15 @@
 
     updateEmpty();
     flip(prev);
-    fresh.forEach(function (name, i) {
-      enter(nodes[name], initial ? 950 + i * 130 : 0);
-    });
   }
 
-  /* ---------- Einlösen: Stempel, dann Plakat fällt weg ---------- */
-  function removeBounty(name, btn) {
+  /* ---------- Kontrakt abschließen ---------- */
+  function removeContract(name, btn) {
     var n = nodes[name];
     if (!n || n.leaving) return;
     n.leaving = true;
     btn.disabled = true;
-    bounties = bounties.filter(function (b) { return b.name !== name; });
+    contracts = contracts.filter(function (b) { return b.name !== name; });
     save();
     n.li.classList.add("leaving");
 
@@ -600,19 +596,19 @@
       }
       if (reduce) { done(); return; }
       var a = n.li.animate([
-        { opacity: 1, translate: "0 0", filter: "none" },
-        { opacity: 0, translate: "0 60px", filter: "blur(4px) brightness(.3)" }
-      ], { duration: 600, easing: "cubic-bezier(.5, 0, .75, 0)", fill: "forwards" });
+        { opacity: 1, transform: "translate(0, 0)", filter: "none" },
+        { opacity: 0, transform: "translate(0, 40px)", filter: "blur(4px) brightness(0.3)" }
+      ], { duration: 500, easing: "cubic-bezier(.5, 0, .75, 0)", fill: "forwards" });
       a.onfinish = done;
-    }, reduce ? 0 : 900);
+    }, reduce ? 0 : 750);
   }
 
-  /* ---------- Eingabe ---------- */
+  /* ---------- Formular Validierung ---------- */
   function updateAmountHint() {
     var n = parseInt(amountEl.value, 10);
     amountHint.className = "hint";
     if (isNaN(n) || n < 1) { amountHint.textContent = "Mindestens 1 Diamant."; return; }
-    if (n > MAX) { amountHint.textContent = "Maximal " + MAX + " Diamanten (36 Stacks)."; return; }
+    if (n > MAX) { amountHint.textContent = "Maximal " + MAX + " Diamanten."; return; }
     amountHint.textContent = stacks(n);
   }
 
@@ -625,47 +621,42 @@
     issuerHint.className = "hint";
     if (!NAME_RE.test(issuer)) {
       issuerHint.className = "hint error";
-      issuerHint.textContent = "Ungültiger Name. Erlaubt sind 3 bis 16 Zeichen: Buchstaben, Zahlen, Unterstrich.";
+      issuerHint.textContent = "Ungültig. Erlaubt sind 3 bis 16 Zeichen (Buchstaben, Zahlen, Unterstrich).";
       wiggle(issuerEl);
       ok = false;
-    } else {
-      issuerHint.textContent = "Wer setzt das Kopfgeld aus? (3 bis 16 Zeichen)";
     }
 
     nameHint.className = "hint";
     if (!NAME_RE.test(name)) {
       nameHint.className = "hint error";
-      nameHint.textContent = "Ungültiger Name. Erlaubt sind 3 bis 16 Zeichen: Buchstaben, Zahlen, Unterstrich.";
+      nameHint.textContent = "Ungültig. Erlaubt sind 3 bis 16 Zeichen (Buchstaben, Zahlen, Unterstrich).";
       wiggle(nameEl);
       ok = false;
-    } else {
-      nameHint.textContent = "3 bis 16 Zeichen: Buchstaben, Zahlen, Unterstrich.";
     }
 
     if (isNaN(n) || n < 1 || n > MAX) {
       amountHint.className = "hint error";
-      amountHint.textContent = "Gib eine Zahl zwischen 1 und " + MAX + " ein.";
+      amountHint.textContent = "Gib eine gültige Anzahl zwischen 1 und " + MAX + " ein.";
       wiggle(amountEl);
       ok = false;
     }
     if (!ok) return;
 
-    var existing = bounties.filter(function (b) { return b.name.toLowerCase() === name.toLowerCase(); })[0];
+    var existing = contracts.filter(function (b) { return b.name.toLowerCase() === name.toLowerCase(); })[0];
     if (existing) {
       existing.diamonds = Math.min(MAX * 10, existing.diamonds + n);
-      if (issuer) existing.issuer = issuer; // Aktualisiere den neuesten Aussetzer falls gewünscht
+      if (issuer) existing.issuer = issuer;
     } else {
-      bounties.push({ name: name, diamonds: n, issuer: issuer });
+      contracts.push({ name: name, diamonds: n, issuer: issuer });
     }
     save();
     render(false);
 
     if (!reduce) {
-      formEl.animate([{ translate: "0 0" }, { translate: "0 5px" }, { translate: "0 0" }], { duration: 320, easing: EASE });
-      submitBtn.animate([{ scale: 1 }, { scale: .96 }, { scale: 1 }], { duration: 320, easing: EASS });
+      formEl.animate([{ transform: "translate(0, 0)" }, { transform: "translate(0, 4px)" }, { transform: "translate(0, 0)" }], { duration: 250, easing: EASE });
     }
     nameEl.value = "";
-    nameHint.textContent = "Kopfgeld auf " + name + " ausgesetzt.";
+    nameHint.textContent = "Ziel " + name + " dem System hinzugefügt.";
     nameEl.focus();
   }
 
@@ -681,7 +672,7 @@
   nameEl.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
   issuerEl.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
 
-  /* ---------- Laternenlicht folgt dem Zeiger ---------- */
+  /* ---------- Umgebungslicht ---------- */
   var light = document.getElementById("light");
   var tx = window.innerWidth / 2, ty = window.innerHeight * 0.35, cx = tx, cy = ty;
   window.addEventListener("pointermove", function (e) {
@@ -695,7 +686,7 @@
     (function loop(t) {
       cx += (tx - cx) * 0.08;
       cy += (ty - cy) * 0.08;
-      var r = 430 + 12 * Math.sin(t / 230) + 8 * Math.sin(t / 97);
+      var r = 440 + 10 * Math.sin(t / 250);
       light.style.setProperty("--mx", cx.toFixed(1) + "px");
       light.style.setProperty("--my", cy.toFixed(1) + "px");
       light.style.setProperty("--r", r.toFixed(1) + "px");
@@ -703,16 +694,16 @@
     })(performance.now());
   }
 
-  /* ---------- Staub ---------- */
+  /* ---------- Staubpartikel ---------- */
   if (!reduce) {
     var dust = document.getElementById("dust");
-    for (var i = 0; i < 26; i++) {
+    for (var i = 0; i < 22; i++) {
       var p = document.createElement("i");
       p.style.setProperty("--x", (Math.random() * 100) + "%");
-      p.style.setProperty("--s", (2 + Math.random() * 2.5) + "px");
-      p.style.setProperty("--d", (16 + Math.random() * 22) + "s");
+      p.style.setProperty("--s", (2 + Math.random() * 2) + "px");
+      p.style.setProperty("--d", (18 + Math.random() * 20) + "s");
       p.style.setProperty("--l", "-" + (Math.random() * 30) + "s");
-      p.style.setProperty("--dx", (Math.random() * 160 - 80) + "px");
+      p.style.setProperty("--dx", (Math.random() * 120 - 60) + "px");
       dust.appendChild(p);
     }
   }
